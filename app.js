@@ -16,7 +16,9 @@ let s = {
   voters: [],
   search: "",
   modal: null,
-  busy: false
+  busy: false,
+  delid: "",
+  delkey: ""
 };
 
 let installPrompt = null;
@@ -65,6 +67,43 @@ function toast(m, err = false) {
 
 
 /* =========================
+   FOTO KANDIDAT
+========================= */
+
+function candidatePhoto(url, nama, type) {
+
+  const clean = String(url || "").trim();
+
+  if (clean) {
+
+    return `
+      <img
+        class="candidate-photo"
+        src="${esc(clean)}"
+        alt="${esc(nama || type)}"
+        loading="lazy"
+        onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';"
+      >
+
+      <div
+        class="candidate-photo-placeholder"
+        style="display:none"
+      >
+        ${type === "ketua" ? "K" : "W"}
+      </div>
+    `;
+
+  }
+
+  return `
+    <div class="candidate-photo-placeholder">
+      ${type === "ketua" ? "K" : "W"}
+    </div>
+  `;
+}
+
+
+/* =========================
    API
 ========================= */
 
@@ -80,11 +119,6 @@ function api(action, params = {}) {
 
     const sc = document.createElement("script");
 
-    /*
-      Cache buster.
-      Setiap request memiliki timestamp berbeda,
-      sehingga browser/PWA tidak mengambil data lama.
-    */
     const q = new URLSearchParams({
       action: action,
       callback: cb,
@@ -134,17 +168,18 @@ function api(action, params = {}) {
 
 
 /* =========================
-   REFRESH STATE
+   REFRESH
 ========================= */
 
 async function refresh(silent = false) {
 
   try {
 
-    /*
-      Selalu mengambil state terbaru dari Apps Script.
-    */
     state = await api("getState");
+
+    if (!state) {
+      throw new Error("Data pemilihan tidak tersedia.");
+    }
 
     if (!silent) {
       render();
@@ -159,7 +194,6 @@ async function refresh(silent = false) {
     }
 
   }
-
 }
 
 
@@ -421,9 +455,7 @@ function vote() {
 
         <section class="sheet">
 
-          <div
-            style="text-align:center;padding:25px 0"
-          >
+          <div style="text-align:center;padding:25px 0">
 
             <div
               class="seal"
@@ -464,9 +496,7 @@ function vote() {
 
         <section class="sheet">
 
-          <div
-            style="text-align:center;padding:35px 0"
-          >
+          <div style="text-align:center;padding:35px 0">
 
             <div class="seal">
               ✓
@@ -495,45 +525,113 @@ function vote() {
   }
 
 
-  /*
-    PENTING:
-    Tidak ada pembatas jumlah kandidat.
+  /* ==========================================
+     SEMUA KANDIDAT
+     TANPA BATAS 2 / 3 / 4
+  ========================================== */
 
-    Semua kandidat dari Apps Script
-    akan ditampilkan.
-  */
+  const candidates =
+    Array.isArray(state.candidates)
+      ? state.candidates
+      : [];
 
-  const rows = (state.candidates || [])
-    .map(c => `
 
-      <div
-        class="cand ${s.selected === c.id ? "selected" : ""}"
-        data-a="select"
-        data-id="${esc(c.id)}"
-      >
+  const rows = candidates
+    .map(c => {
 
-        <div class="no">
-          ${esc(c.no)}
+      const selected =
+        s.selected === c.id
+          ? "selected"
+          : "";
+
+
+      return `
+
+        <div
+          class="cand candidate-card ${selected}"
+          data-a="select"
+          data-id="${esc(c.id)}"
+        >
+
+          <div class="no">
+            ${esc(c.no)}
+          </div>
+
+
+          <div class="candidate-photos">
+
+            <div class="candidate-person">
+
+              ${candidatePhoto(
+                c.fotoKetua ||
+                c.photoKetua ||
+                c.ketuaFoto ||
+                "",
+                c.ketua,
+                "ketua"
+              )}
+
+              <span class="person-label">
+                KETUA
+              </span>
+
+              <strong>
+                ${esc(c.ketua)}
+              </strong>
+
+            </div>
+
+
+            <div class="candidate-person">
+
+              ${candidatePhoto(
+                c.fotoWakil ||
+                c.photoWakil ||
+                c.wakilFoto ||
+                "",
+                c.wakil,
+                "wakil"
+              )}
+
+              <span class="person-label">
+                WAKIL
+              </span>
+
+              <strong>
+                ${esc(c.wakil || "-")}
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div class="candinfo">
+
+            <p class="names">
+              Pasangan No. ${esc(c.no)}
+            </p>
+
+            ${
+              c.visi
+                ? `
+                  <p class="visi">
+                    ${esc(c.visi)}
+                  </p>
+                `
+                : ""
+            }
+
+          </div>
+
+
+          <div class="check"></div>
+
         </div>
 
-        <div class="candinfo">
+      `;
 
-          <p class="names">
-            ${esc(c.ketua)}
-            ${c.wakil ? " & " + esc(c.wakil) : ""}
-          </p>
-
-          <p class="visi">
-            ${esc(c.visi || "")}
-          </p>
-
-        </div>
-
-        <div class="check"></div>
-
-      </div>
-
-    `)
+    })
     .join("");
 
 
@@ -558,11 +656,23 @@ function vote() {
         </h1>
 
         <p class="sub">
-          Pilih salah satu pasangan calon,
-          lalu kunci pilihanmu.
+          Terdapat ${candidates.length}
+          pasangan calon.
+          Pilih salah satu pasangan.
         </p>
 
-        ${rows}
+        <div class="candidate-list">
+
+          ${
+            rows ||
+            `
+              <p class="mini">
+                Belum ada pasangan calon.
+              </p>
+            `
+          }
+
+        </div>
 
         <div style="height:8px"></div>
 
@@ -694,7 +804,7 @@ function admin() {
 
 
 /* =========================
-   STATUS BADGE
+   BADGE
 ========================= */
 
 function badge() {
@@ -743,21 +853,48 @@ function tabCandidates() {
 
   const locked = state.status !== "setup";
 
+  const candidates =
+    Array.isArray(state.candidates)
+      ? state.candidates
+      : [];
 
-  /*
-    SEMUA kandidat ditampilkan.
-    Tidak ada .slice(0,2)
-    dan tidak ada pembatas jumlah.
-  */
 
-  const list = (state.candidates || [])
+  const list = candidates
     .map(c => `
 
-      <div class="list">
+      <div class="list candidate-admin-card">
 
         <div class="chip">
           ${esc(c.no)}
         </div>
+
+
+        <div class="admin-mini-photos">
+
+          <div>
+            ${candidatePhoto(
+              c.fotoKetua ||
+              c.photoKetua ||
+              c.ketuaFoto ||
+              "",
+              c.ketua,
+              "ketua"
+            )}
+          </div>
+
+          <div>
+            ${candidatePhoto(
+              c.fotoWakil ||
+              c.photoWakil ||
+              c.wakilFoto ||
+              "",
+              c.wakil,
+              "wakil"
+            )}
+          </div>
+
+        </div>
+
 
         <div class="info">
 
@@ -771,6 +908,7 @@ function tabCandidates() {
           </div>
 
         </div>
+
 
         ${
           locked
@@ -802,14 +940,15 @@ function tabCandidates() {
       </h2>
 
       <p class="sub">
-        Minimal 2 pasangan calon diperlukan
-        sebelum pemilihan dibuka.
+        Total pasangan calon:
+        <strong>${candidates.length}</strong>
       </p>
 
       ${
         list ||
         '<p class="mini">Belum ada calon.</p>'
       }
+
 
       ${
         locked
@@ -828,28 +967,66 @@ function tabCandidates() {
 
             <input
               id="cNo"
-              placeholder="${state.candidates.length + 1}"
+              placeholder="${candidates.length + 1}"
             >
+
 
             <label>
               Nama calon ketua
             </label>
 
-            <input id="cKetua">
+            <input
+              id="cKetua"
+              placeholder="Nama lengkap ketua"
+            >
+
+
+            <label>
+              Foto Ketua
+            </label>
+
+            <input
+              id="cFotoKetua"
+              type="url"
+              placeholder="Tempel URL foto Ketua"
+              autocomplete="off"
+            >
+
 
             <label>
               Nama calon wakil
             </label>
 
-            <input id="cWakil">
+            <input
+              id="cWakil"
+              placeholder="Nama lengkap wakil"
+            >
+
+
+            <label>
+              Foto Wakil
+            </label>
+
+            <input
+              id="cFotoWakil"
+              type="url"
+              placeholder="Tempel URL foto Wakil"
+              autocomplete="off"
+            >
+
 
             <label>
               Visi / moto singkat
             </label>
 
-            <textarea id="cVisi"></textarea>
+            <textarea
+              id="cVisi"
+              placeholder="Visi atau moto pasangan"
+            ></textarea>
+
 
             <div style="height:12px"></div>
+
 
             <button
               class="btn btn-dark"
@@ -859,6 +1036,7 @@ function tabCandidates() {
             </button>
           `
       }
+
 
       ${
         state.status === "setup"
@@ -870,7 +1048,7 @@ function tabCandidates() {
               class="btn btn-primary"
               data-a="openElection"
               ${
-                state.candidates.length < 2
+                candidates.length < 2
                   ? "disabled"
                   : ""
               }
@@ -987,21 +1165,13 @@ function tabRecap() {
 
       <tr>
 
-        <td>
-          ${esc(v.nama)}
-        </td>
+        <td>${esc(v.nama)}</td>
 
-        <td>
-          ${esc(v.kelas)}
-        </td>
+        <td>${esc(v.kelas)}</td>
 
-        <td>
-          No. ${esc(v.no)}
-        </td>
+        <td>No. ${esc(v.no)}</td>
 
-        <td>
-          ${fmt(v.ts)}
-        </td>
+        <td>${fmt(v.ts)}</td>
 
         <td>
 
@@ -1037,27 +1207,13 @@ function tabRecap() {
       <div class="statgrid">
 
         <div class="stat">
-
-          <b>
-            ${tv}
-          </b>
-
-          <span>
-            Total suara masuk
-          </span>
-
+          <b>${tv}</b>
+          <span>Total suara masuk</span>
         </div>
 
         <div class="stat">
-
-          <b>
-            ${state.candidates.length}
-          </b>
-
-          <span>
-            Pasangan calon
-          </span>
-
+          <b>${state.candidates.length}</b>
+          <span>Pasangan calon</span>
         </div>
 
       </div>
@@ -1101,13 +1257,11 @@ function tabRecap() {
           <thead>
 
             <tr>
-
               <th>Nama</th>
               <th>Kelas</th>
               <th>Pilihan</th>
               <th>Waktu</th>
               <th></th>
-
             </tr>
 
           </thead>
@@ -1116,7 +1270,7 @@ function tabRecap() {
 
             ${
               trs ||
-              '<tr><td colspan="5">Belum ada data. Klik Muat ulang.</td></tr>'
+              '<tr><td colspan="5">Belum ada data.</td></tr>'
             }
 
           </tbody>
@@ -1289,7 +1443,6 @@ function winner(preview) {
 
 
   const tv = state.totalVoters || 0;
-
   const v = state.votes[w.id] || 0;
 
   const p = tv
@@ -1306,56 +1459,77 @@ function winner(preview) {
       </div>
 
       <p class="eyebrow">
-
         KETUA & WAKIL KETUA OSIS TERPILIH ·
         PERIODE ${esc(state.periode)}
-
       </p>
 
-      <h1>
+      <div class="winner-photos">
 
+        <div>
+          ${candidatePhoto(
+            w.fotoKetua ||
+            w.photoKetua ||
+            w.ketuaFoto ||
+            "",
+            w.ketua,
+            "ketua"
+          )}
+
+          <strong>
+            ${esc(w.ketua)}
+          </strong>
+
+          <span>
+            KETUA
+          </span>
+        </div>
+
+        <div>
+          ${candidatePhoto(
+            w.fotoWakil ||
+            w.photoWakil ||
+            w.wakilFoto ||
+            "",
+            w.wakil,
+            "wakil"
+          )}
+
+          <strong>
+            ${esc(w.wakil || "-")}
+          </strong>
+
+          <span>
+            WAKIL
+          </span>
+        </div>
+
+      </div>
+
+      <h1>
         ${esc(w.ketua)}
         ${w.wakil ? " & " + esc(w.wakil) : ""}
-
       </h1>
 
       <p class="sub">
-
         Nomor Urut ${esc(w.no)}
         ${w.visi ? " · " + esc(w.visi) : ""}
-
       </p>
 
       <div class="certstats">
 
         <div class="certstat">
-
           <b>${v}</b>
-
-          <span>
-            Suara diperoleh
-          </span>
-
+          <span>Suara diperoleh</span>
         </div>
 
         <div class="certstat">
-
           <b>${p}%</b>
-
-          <span>
-            Persentase
-          </span>
-
+          <span>Persentase</span>
         </div>
 
         <div class="certstat">
-
           <b>${tv}</b>
-
-          <span>
-            Total suara
-          </span>
-
+          <span>Total suara</span>
         </div>
 
       </div>
@@ -1416,7 +1590,7 @@ function modal() {
 
     body = `
       Kamu memilih pasangan nomor
-      ${c.no}:
+      ${esc(c.no)}:
 
       <strong>
         ${esc(c.ketua)}
@@ -1456,8 +1630,7 @@ function modal() {
       body =
         "Terdapat " +
         tied.length +
-        " pasangan dengan suara tertinggi " +
-        "yang sama (" +
+        " pasangan dengan suara tertinggi yang sama (" +
         top +
         " suara). Panitia harus menentukan pemenang:" +
 
@@ -1583,7 +1756,6 @@ function modal() {
 
     </div>
   `;
-
 }
 
 
@@ -1819,7 +1991,6 @@ async function doModal() {
 
 
       await refresh();
-
       await loadVoters();
 
       toast("Data dihapus.");
@@ -1853,7 +2024,7 @@ async function loadVoters() {
 
   if (r.ok) {
 
-    s.voters = r.voters;
+    s.voters = r.voters || [];
 
     render();
 
@@ -1862,7 +2033,6 @@ async function loadVoters() {
     toast(r.error, true);
 
   }
-
 }
 
 
@@ -1887,7 +2057,6 @@ document.addEventListener(
       if (a === "admin") {
 
         s.view = "adminLogin";
-
         render();
 
       }
@@ -2041,36 +2210,48 @@ document.addEventListener(
 
       else if (a === "addcand") {
 
+        const no =
+          document.getElementById("cNo")?.value || "";
+
+        const ketua =
+          document.getElementById("cKetua")?.value || "";
+
+        const fotoKetua =
+          document.getElementById("cFotoKetua")?.value || "";
+
+        const wakil =
+          document.getElementById("cWakil")?.value || "";
+
+        const fotoWakil =
+          document.getElementById("cFotoWakil")?.value || "";
+
+        const visi =
+          document.getElementById("cVisi")?.value || "";
+
+
+        if (!ketua.trim()) {
+          return toast(
+            "Nama calon ketua wajib diisi.",
+            true
+          );
+        }
+
+
         const r = await api(
           "adminAddCandidate",
           {
             pin: s.pin,
-
-            no:
-              document.getElementById("cNo")
-                .value,
-
-            ketua:
-              document.getElementById("cKetua")
-                .value,
-
-            wakil:
-              document.getElementById("cWakil")
-                .value,
-
-            visi:
-              document.getElementById("cVisi")
-                .value
+            no: no,
+            ketua: ketua,
+            fotoKetua: fotoKetua,
+            wakil: wakil,
+            fotoWakil: fotoWakil,
+            visi: visi
           }
         );
 
 
         if (r.ok) {
-
-          /*
-            Ambil state terbaru dari server
-            setelah kandidat berhasil ditambahkan.
-          */
 
           await refresh(false);
 
@@ -2211,7 +2392,6 @@ document.addEventListener(
           "adminSavePeriode",
           {
             pin: s.pin,
-
             periode:
               document.getElementById(
                 "periode"
@@ -2465,31 +2645,14 @@ function hideInstallBox() {
 }
 
 
-/*
-  Jika aplikasi sudah terpasang,
-  jangan tampilkan tombol Install.
-*/
-
 if (isInstalled()) {
-
   hideInstallBox();
-
 }
 
-
-/*
-  Chrome/Edge memberikan event ini
-  ketika aplikasi belum terpasang.
-*/
 
 window.addEventListener(
   "beforeinstallprompt",
   e => {
-
-    /*
-      Jika sudah berjalan sebagai aplikasi,
-      jangan tampilkan tombol install.
-    */
 
     if (isInstalled()) {
 
@@ -2499,11 +2662,9 @@ window.addEventListener(
 
     }
 
-
     e.preventDefault();
 
     installPrompt = e;
-
 
     const box =
       document.getElementById(
@@ -2511,19 +2672,12 @@ window.addEventListener(
       );
 
     if (box) {
-
       box.hidden = false;
-
     }
 
   }
 );
 
-
-/*
-  Setelah instalasi benar-benar selesai,
-  langsung sembunyikan tombol Install.
-*/
 
 window.addEventListener(
   "appinstalled",
@@ -2537,62 +2691,47 @@ window.addEventListener(
 );
 
 
-/*
-  Tombol Install.
-*/
+document.addEventListener(
+  "click",
+  async e => {
 
-const installButton =
-  document.getElementById(
-    "installBtn"
-  );
+    const btn =
+      e.target.closest("#installBtn");
 
+    if (!btn) return;
 
-if (installButton) {
+    if (!installPrompt) {
 
-  installButton.onclick =
-    async () => {
-
-      if (!installPrompt) {
-
-        /*
-          Kalau aplikasi sudah terpasang,
-          tombol langsung disembunyikan.
-        */
-
-        if (isInstalled()) {
-          hideInstallBox();
-        }
-
-        return;
-
+      if (isInstalled()) {
+        hideInstallBox();
       }
 
+      return;
 
-      installPrompt.prompt();
+    }
 
+    installPrompt.prompt();
+
+    try {
       await installPrompt.userChoice;
+    } catch (err) {}
 
-      installPrompt = null;
+    installPrompt = null;
 
-      hideInstallBox();
+    hideInstallBox();
 
-    };
-
-}
+  }
+);
 
 
 /* =========================
    SERVICE WORKER
 ========================= */
 
-if (
-  "serviceWorker" in navigator
-) {
+if ("serviceWorker" in navigator) {
 
   navigator.serviceWorker
-    .register(
-      "sw.js?v=3"
-    )
+    .register("sw.js?v=4")
     .catch(() => {});
 
 }
@@ -2605,11 +2744,9 @@ if (
 refresh();
 
 
-/*
-  Sinkronisasi otomatis setiap 5 detik.
-  Karena API memakai _ts, data terbaru
-  akan diminta dari server.
-*/
+/* =========================
+   AUTO REFRESH
+========================= */
 
 setInterval(
   () => refresh(true),
