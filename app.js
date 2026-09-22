@@ -541,11 +541,11 @@ function vote() {
 
     const no = String(c.no);
 
-    const fotoKetua =
-      `image/calon${no}-ketua.jpeg`;
+   const fotoKetua =
+  `images/calon${no}-ketua.jpeg`;
 
-    const fotoWakil =
-      `image/calon${no}-wakil.jpeg`;
+const fotoWakil =
+  `images/calon${no}-wakil.jpeg`;
 
     return `
       <div
