@@ -1,13 +1,13 @@
 {
-  "name": "Pemilihan Ketua & Wakil Ketua OSIS - SMP Negeri 1 Rambang Niru",
+  "name": "Pemilihan Ketua & Wakil Ketua OSIS",
   "short_name": "Pemilihan OSIS",
-  "description": "Aplikasi pemilihan Ketua dan Wakil Ketua OSIS SMP Negeri 1 Rambang Niru.",
+  "description": "Aplikasi Pemilihan Ketua dan Wakil Ketua OSIS SMP Negeri 1 Rambang Niru",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0D47A1",
-  "theme_color": "#0D47A1",
+  "background_color": "#f5f8fc",
+  "theme_color": "#0d47a1",
   "icons": [
     {
       "src": "icons/icon-192.png",
