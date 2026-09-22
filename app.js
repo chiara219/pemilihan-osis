@@ -555,11 +555,8 @@ function vote() {
 
       const no = String(c.no);
 
-      const fotoKetua =
-        getCandidatePhoto(no, "ketua");
-
-      const fotoWakil =
-        getCandidatePhoto(no, "wakil");
+     const fotoKetua = `https://raw.githubusercontent.com/chiara219/pemilihan-osis/main/images/calon${no}-ketua.jpeg`;
+const fotoWakil = `https://raw.githubusercontent.com/chiara219/pemilihan-osis/main/images/calon${no}-wakil.jpeg`;
 
       return `
         <div
