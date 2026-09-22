@@ -2716,7 +2716,9 @@ document.addEventListener(
 if ("serviceWorker" in navigator) {
 
   navigator.serviceWorker
-    .register("sw.js?v=4")
+   .register(
+  "sw.js?v=10"
+)
     .catch(() => {});
 
 }
