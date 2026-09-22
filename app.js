@@ -536,103 +536,79 @@ function vote() {
       : [];
 
 
-  const rows = candidates
-    .map(c => {
+  const rows = (state.candidates || [])
+  .map(c => {
 
-      const selected =
-        s.selected === c.id
-          ? "selected"
-          : "";
+    const ketuaFoto =
+      `image/calon${encodeURIComponent(c.no)}-ketua.jpeg`;
 
+    const wakilFoto =
+      `image/calon${encodeURIComponent(c.no)}-wakil.jpeg`;
 
-      return `
+    return `
+      <div
+        class="cand ${s.selected === c.id ? "selected" : ""}"
+        data-a="select"
+        data-id="${esc(c.id)}"
+      >
 
-        <div
-          class="cand candidate-card ${selected}"
-          data-a="select"
-          data-id="${esc(c.id)}"
-        >
+        <div class="no">
+          ${esc(c.no)}
+        </div>
 
-          <div class="no">
-            ${esc(c.no)}
-          </div>
+        <div class="candphotos">
 
+          <div class="candidate-person">
 
-          <div class="candidate-photos">
+            <img
+              src="${ketuaFoto}"
+              alt="Foto Ketua"
+              class="candidate-photo"
+              onerror="this.style.display='none'"
+            >
 
-            <div class="candidate-person">
-
-              ${candidatePhoto(
-                c.fotoKetua ||
-                c.photoKetua ||
-                c.ketuaFoto ||
-                "",
-                c.ketua,
-                "ketua"
-              )}
-
-              <span class="person-label">
-                KETUA
-              </span>
-
-              <strong>
-                ${esc(c.ketua)}
-              </strong>
-
-            </div>
-
-
-            <div class="candidate-person">
-
-              ${candidatePhoto(
-                c.fotoWakil ||
-                c.photoWakil ||
-                c.wakilFoto ||
-                "",
-                c.wakil,
-                "wakil"
-              )}
-
-              <span class="person-label">
-                WAKIL
-              </span>
-
-              <strong>
-                ${esc(c.wakil || "-")}
-              </strong>
-
-            </div>
+            <span>
+              Ketua
+            </span>
 
           </div>
 
+          <div class="candidate-person">
 
-          <div class="candinfo">
+            <img
+              src="${wakilFoto}"
+              alt="Foto Wakil"
+              class="candidate-photo"
+              onerror="this.style.display='none'"
+            >
 
-            <p class="names">
-              Pasangan No. ${esc(c.no)}
-            </p>
-
-            ${
-              c.visi
-                ? `
-                  <p class="visi">
-                    ${esc(c.visi)}
-                  </p>
-                `
-                : ""
-            }
+            <span>
+              Wakil
+            </span>
 
           </div>
-
-
-          <div class="check"></div>
 
         </div>
 
-      `;
+        <div class="candinfo">
 
-    })
-    .join("");
+          <p class="names">
+            ${esc(c.ketua)}
+            ${c.wakil ? " & " + esc(c.wakil) : ""}
+          </p>
+
+          <p class="visi">
+            ${esc(c.visi || "")}
+          </p>
+
+        </div>
+
+        <div class="check"></div>
+
+      </div>
+    `;
+  })
+  .join("");
 
 
   return `
