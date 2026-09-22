@@ -569,19 +569,116 @@ const fotoWakil = `https://raw.githubusercontent.com/chiara219/pemilihan-osis/ma
             ${esc(c.no)}
           </div>
 
-          <div class="candidate-photos">
+         <div class="candidate-photos">
 
-            <div class="candidate-person">
+  <div class="candidate-person">
 
-              <img
-                src="${fotoKetua}"
-                alt="${esc(c.ketua)}"
-                class="candidate-photo"
-                loading="lazy"
-                onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';"
-              >
+    <img
+      src="${fotoKetua}"
+      alt="${esc(c.ketua)}"
+      class="candidate-photo"
+      loading="eager"
+      style="
+        display:block !important;
+        width:120px !important;
+        height:150px !important;
+        min-width:120px;
+        min-height:150px;
+        object-fit:cover;
+        object-position:center;
+        border-radius:14px;
+        margin:0 auto 8px;
+        visibility:visible !important;
+        opacity:1 !important;
+      "
+      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+    >
 
-              <div
+    <div
+      class="candidate-photo-placeholder"
+      style="
+        display:none;
+        width:120px;
+        height:150px;
+        border-radius:14px;
+        align-items:center;
+        justify-content:center;
+        margin:0 auto 8px;
+        font-size:42px;
+        font-weight:700;
+      "
+    >
+      K
+    </div>
+
+    <div class="candidate-role">
+      KETUA
+    </div>
+
+    <div class="candidate-name">
+      ${esc(c.ketua)}
+    </div>
+
+  </div>
+
+
+  ${
+    c.wakil
+      ? `
+        <div class="candidate-person">
+
+          <img
+            src="${fotoWakil}"
+            alt="${esc(c.wakil)}"
+            class="candidate-photo"
+            loading="eager"
+            style="
+              display:block !important;
+              width:120px !important;
+              height:150px !important;
+              min-width:120px;
+              min-height:150px;
+              object-fit:cover;
+              object-position:center;
+              border-radius:14px;
+              margin:0 auto 8px;
+              visibility:visible !important;
+              opacity:1 !important;
+            "
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+          >
+
+          <div
+            class="candidate-photo-placeholder"
+            style="
+              display:none;
+              width:120px;
+              height:150px;
+              border-radius:14px;
+              align-items:center;
+              justify-content:center;
+              margin:0 auto 8px;
+              font-size:42px;
+              font-weight:700;
+            "
+          >
+            W
+          </div>
+
+          <div class="candidate-role">
+            WAKIL
+          </div>
+
+          <div class="candidate-name">
+            ${esc(c.wakil)}
+          </div>
+
+        </div>
+      `
+      : ""
+  }
+
+</div>
                 class="candidate-photo-placeholder"
                 style="display:none"
               >
