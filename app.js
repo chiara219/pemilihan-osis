@@ -541,11 +541,8 @@ function vote() {
 
     const no = String(c.no);
 
-   const fotoKetua =
-  `images/calon${no}-ketua.jpeg`;
-
-const fotoWakil =
-  `images/calon${no}-wakil.jpeg`;
+    const fotoKetua = `images/calon${no}-ketua.jpeg`;
+    const fotoWakil = `images/calon${no}-wakil.jpeg`;
 
     return `
       <div
@@ -564,9 +561,8 @@ const fotoWakil =
 
             <img
               src="${fotoKetua}"
-              alt="Foto ${esc(c.ketua)}"
+              alt="${esc(c.ketua)}"
               class="candidate-photo"
-              onerror="this.style.display='none'"
             >
 
             <div class="candidate-role">
@@ -586,9 +582,8 @@ const fotoWakil =
 
                   <img
                     src="${fotoWakil}"
-                    alt="Foto ${esc(c.wakil)}"
+                    alt="${esc(c.wakil)}"
                     class="candidate-photo"
-                    onerror="this.style.display='none'"
                   >
 
                   <div class="candidate-role">
@@ -622,10 +617,8 @@ const fotoWakil =
 
       </div>
     `;
-
   })
   .join("");
-
 
   return `
     <main class="container">
