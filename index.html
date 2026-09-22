@@ -1,30 +1,1099 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0D47A1">
-  <meta name="description" content="Aplikasi Pemilihan Ketua & Wakil Ketua OSIS SMP Negeri 1 Rambang Niru">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Pemilihan OSIS">
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1"
+  >
+
+  <meta name="theme-color" content="#0d47a1">
+
+  <meta
+    name="description"
+    content="Aplikasi Pemilihan Ketua dan Wakil Ketua OSIS"
+  >
+
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <link
+    rel="icon"
+    type="image/png"
+    href="icons/icon-192.png"
+  >
+
+  <link
+    rel="apple-touch-icon"
+    href="icons/icon-192.png"
+  >
+
   <title>Pemilihan Ketua OSIS</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+
+  <style>
+    :root {
+      --blue: #0d47a1;
+      --blue2: #1565c0;
+      --green: #00a86b;
+      --red: #c62828;
+      --dark: #102033;
+      --text: #17212b;
+      --muted: #6b7785;
+      --bg: #f3f6fa;
+      --white: #ffffff;
+      --border: #dfe5ec;
+      --shadow: 0 15px 45px rgba(16,32,51,.10);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(
+          135deg,
+          #f8fbff 0%,
+          #eef4fb 50%,
+          #f5faf7 100%
+        );
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+    }
+
+    #app {
+      min-height: 100vh;
+    }
+
+    /* =========================
+       TOPBAR
+    ========================= */
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+
+      min-height: 78px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 12px 22px;
+
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(14px);
+
+      border-bottom: 1px solid var(--border);
+
+      box-shadow:
+        0 4px 18px rgba(0,0,0,.05);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+      flex: 0 0 auto;
+    }
+
+    .brand-kicker {
+      margin: 0 0 3px;
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--dark);
+    }
+
+    .gear {
+      width: 43px;
+      height: 43px;
+
+      border: 1px solid var(--border);
+      border-radius: 14px;
+
+      background: white;
+      color: var(--blue);
+
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    /* =========================
+       CONTAINER
+    ========================= */
+
+    .container {
+      width: min(760px, calc(100% - 28px));
+      margin: 30px auto 50px;
+    }
+
+    .sheet {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .headline {
+      margin: 0;
+
+      font-size: clamp(28px, 5vw, 42px);
+      line-height: 1.1;
+
+      color: var(--dark);
+    }
+
+    .sub {
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    label {
+      display: block;
+      margin: 15px 0 7px;
+
+      color: var(--dark);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+
+      padding: 13px 14px;
+
+      border: 1px solid var(--border);
+      border-radius: 13px;
+
+      outline: none;
+
+      background: #fff;
+      color: var(--text);
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--blue2);
+
+      box-shadow:
+        0 0 0 3px rgba(21,101,192,.10);
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    /* =========================
+       BUTTON
+    ========================= */
+
+    .btn {
+      min-height: 48px;
+
+      padding: 12px 18px;
+
+      border-radius: 13px;
+
+      border: 1px solid transparent;
+
+      font-weight: 800;
+
+      transition:
+        transform .15s ease,
+        box-shadow .15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      width: 100%;
+      color: white;
+      background: linear-gradient(
+        135deg,
+        var(--blue),
+        var(--blue2)
+      );
+
+      box-shadow:
+        0 8px 20px rgba(13,71,161,.20);
+    }
+
+    .btn-dark {
+      width: 100%;
+      color: white;
+      background: var(--dark);
+    }
+
+    .btn-ghost {
+      color: var(--dark);
+      background: white;
+      border-color: var(--border);
+    }
+
+    .btn-danger {
+      color: white;
+      background: var(--red);
+    }
+
+    /* =========================
+       STATUS
+    ========================= */
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      padding: 7px 11px;
+
+      border-radius: 999px;
+
+      color: #08744d;
+      background: rgba(0,168,107,.10);
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+
+      border-radius: 50%;
+
+      background: var(--green);
+
+      box-shadow:
+        0 0 0 4px rgba(0,168,107,.12);
+    }
+
+    /* =========================
+       CANDIDATE CARD
+    ========================= */
+
+    .cand {
+      position: relative;
+
+      display: grid;
+
+      grid-template-columns:
+        48px
+        1fr
+        30px;
+
+      gap: 14px;
+
+      align-items: center;
+
+      margin: 12px 0;
+      padding: 15px;
+
+      border: 2px solid var(--border);
+      border-radius: 18px;
+
+      background: white;
+
+      transition:
+        border-color .18s ease,
+        transform .18s ease,
+        box-shadow .18s ease;
+    }
+
+    .cand:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(16,32,51,.08);
+    }
+
+    .cand.selected {
+      border-color: var(--blue2);
+
+      background:
+        linear-gradient(
+          135deg,
+          rgba(13,71,161,.05),
+          rgba(0,168,107,.04)
+        );
+
+      box-shadow:
+        0 10px 28px rgba(13,71,161,.10);
+    }
+
+    .no {
+      width: 48px;
+      height: 48px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 14px;
+
+      color: white;
+
+      font-size: 20px;
+      font-weight: 900;
+
+      background:
+        linear-gradient(
+          135deg,
+          var(--blue),
+          var(--blue2)
+        );
+    }
+
+    .candinfo {
+      min-width: 0;
+    }
+
+    .names {
+      margin: 0;
+
+      color: var(--dark);
+
+      font-size: 17px;
+      font-weight: 900;
+
+      line-height: 1.35;
+    }
+
+    .visi {
+      margin: 5px 0 0;
+
+      color: var(--muted);
+
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .check {
+      width: 24px;
+      height: 24px;
+
+      border: 2px solid #ccd5df;
+      border-radius: 50%;
+    }
+
+    .selected .check {
+      border-color: var(--blue);
+
+      box-shadow:
+        inset 0 0 0 5px white;
+
+      background: var(--blue);
+    }
+
+    /* =========================
+       ADMIN
+    ========================= */
+
+    .admin-wrap {
+      width: min(1000px, calc(100% - 28px));
+      margin: 25px auto 60px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+
+      margin-bottom: 14px;
+
+      overflow-x: auto;
+    }
+
+    .tab {
+      flex: 0 0 auto;
+
+      padding: 11px 15px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: white;
+
+      color: var(--muted);
+
+      font-weight: 800;
+    }
+
+    .tab.active {
+      color: white;
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+
+    .panel {
+      padding: 24px;
+
+      background: white;
+
+      border: 1px solid var(--border);
+      border-radius: 20px;
+
+      box-shadow: var(--shadow);
+
+      margin-bottom: 20px;
+    }
+
+    .panel h2 {
+      margin: 18px 0 8px;
+      font-size: 25px;
+    }
+
+    .panel h3 {
+      margin: 0 0 10px;
+    }
+
+    .list {
+      display: grid;
+
+      grid-template-columns:
+        42px
+        1fr
+        auto;
+
+      gap: 12px;
+
+      align-items: center;
+
+      padding: 13px 0;
+
+      border-bottom: 1px solid #edf0f4;
+    }
+
+    .chip {
+      width: 42px;
+      height: 42px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 12px;
+
+      background: #edf4ff;
+      color: var(--blue);
+
+      font-weight: 900;
+    }
+
+    .info strong {
+      display: block;
+      line-height: 1.4;
+    }
+
+    .mini {
+      margin-top: 4px;
+
+      color: var(--muted);
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .iconbtn {
+      width: 38px;
+      height: 38px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: white;
+    }
+
+    .divider {
+      height: 1px;
+
+      margin: 22px 0;
+
+      background: var(--border);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* =========================
+       STATS
+    ========================= */
+
+    .statgrid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(2, minmax(0,1fr));
+
+      gap: 12px;
+
+      margin: 18px 0;
+    }
+
+    .stat {
+      padding: 18px;
+
+      border: 1px solid var(--border);
+      border-radius: 16px;
+
+      background: #f9fbfd;
+    }
+
+    .stat b {
+      display: block;
+
+      font-size: 30px;
+
+      color: var(--blue);
+    }
+
+    .stat span {
+      display: block;
+
+      margin-top: 4px;
+
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .bar {
+      margin: 18px 0;
+    }
+
+    .bartop {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .track {
+      height: 11px;
+
+      margin-top: 8px;
+
+      overflow: hidden;
+
+      border-radius: 999px;
+
+      background: #e9eef4;
+    }
+
+    .fill {
+      height: 100%;
+
+      border-radius: 999px;
+
+      background:
+        linear-gradient(
+          90deg,
+          var(--blue),
+          var(--green)
+        );
+    }
+
+    .pct {
+      margin-top: 5px;
+
+      color: var(--muted);
+
+      font-size: 11px;
+    }
+
+    /* =========================
+       TABLE
+    ========================= */
+
+    .tablewrap {
+      overflow-x: auto;
+
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .voters {
+      width: 100%;
+      min-width: 650px;
+
+      border-collapse: collapse;
+
+      font-size: 13px;
+    }
+
+    .voters th,
+    .voters td {
+      padding: 11px;
+
+      border-bottom: 1px solid #edf0f4;
+
+      text-align: left;
+    }
+
+    .voters th {
+      background: #f7f9fc;
+    }
+
+    /* =========================
+       WINNER
+    ========================= */
+
+    .cert {
+      width: min(760px, calc(100% - 28px));
+
+      margin: 30px auto;
+
+      padding: 40px 25px;
+
+      text-align: center;
+
+      background: white;
+
+      border: 1px solid #dce3ea;
+      border-radius: 24px;
+
+      box-shadow: var(--shadow);
+    }
+
+    .seal {
+      width: 76px;
+      height: 76px;
+
+      display: grid;
+      place-items: center;
+
+      margin: 0 auto;
+
+      border-radius: 50%;
+
+      color: white;
+
+      font-weight: 900;
+
+      background:
+        linear-gradient(
+          135deg,
+          var(--blue),
+          var(--green)
+        );
+    }
+
+    .cert h1 {
+      margin: 15px 0 5px;
+
+      font-size: clamp(28px, 5vw, 46px);
+    }
+
+    .certstats {
+      display: grid;
+
+      grid-template-columns:
+        repeat(3,1fr);
+
+      gap: 10px;
+
+      margin: 25px 0;
+    }
+
+    .certstat {
+      padding: 15px;
+
+      border-radius: 15px;
+
+      background: #f6f8fb;
+    }
+
+    .certstat b {
+      display: block;
+
+      font-size: 24px;
+      color: var(--blue);
+    }
+
+    .certstat span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    /* =========================
+       MODAL
+    ========================= */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+
+      z-index: 100;
+
+      display: grid;
+      place-items: center;
+
+      padding: 20px;
+
+      background: rgba(8,20,35,.55);
+
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-card {
+      width: min(500px, 100%);
+
+      padding: 25px;
+
+      border-radius: 20px;
+
+      background: white;
+
+      box-shadow:
+        0 25px 70px rgba(0,0,0,.25);
+    }
+
+    .modal-card h3 {
+      margin: 0 0 10px;
+
+      font-size: 22px;
+    }
+
+    .modal-card p {
+      white-space: pre-line;
+
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: flex;
+
+      gap: 10px;
+
+      margin-top: 20px;
+    }
+
+    .actions .btn {
+      flex: 1;
+    }
+
+    /* =========================
+       TOAST
+    ========================= */
+
+    .toast {
+      position: fixed;
+
+      left: 50%;
+      bottom: 25px;
+
+      z-index: 200;
+
+      transform: translateX(-50%);
+
+      max-width: calc(100% - 30px);
+
+      padding: 13px 17px;
+
+      border-radius: 12px;
+
+      color: white;
+      background: var(--dark);
+
+      box-shadow:
+        0 12px 35px rgba(0,0,0,.20);
+
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .toast.err {
+      background: var(--red);
+    }
+
+    /* =========================
+       INSTALL BOX
+    ========================= */
+
+    #installBox {
+      position: fixed;
+
+      right: 18px;
+      bottom: 18px;
+
+      z-index: 80;
+
+      width: min(320px, calc(100% - 36px));
+
+      padding: 16px;
+
+      border-radius: 17px;
+
+      background: white;
+
+      border: 1px solid var(--border);
+
+      box-shadow:
+        0 15px 45px rgba(0,0,0,.15);
+    }
+
+    #installBox[hidden] {
+      display: none !important;
+    }
+
+    #installBox strong {
+      display: block;
+
+      margin-bottom: 5px;
+    }
+
+    #installBox p {
+      margin: 0 0 12px;
+
+      color: var(--muted);
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    #installBtn {
+      width: 100%;
+    }
+
+    /* =========================
+       RESPONSIVE
+    ========================= */
+
+    @media (max-width: 600px) {
+
+      .topbar {
+        padding: 10px 14px;
+      }
+
+      .brand-logo {
+        width: 43px;
+        height: 43px;
+      }
+
+      .brand-title {
+        font-size: 13px;
+      }
+
+      .brand-kicker {
+        font-size: 9px;
+      }
+
+      .container {
+        width: min(
+          100% - 18px,
+          760px
+        );
+
+        margin-top: 15px;
+      }
+
+      .sheet {
+        padding: 22px 17px;
+        border-radius: 18px;
+      }
+
+      .admin-wrap {
+        width: calc(100% - 18px);
+      }
+
+      .panel {
+        padding: 18px;
+        border-radius: 17px;
+      }
+
+      .cand {
+        grid-template-columns:
+          42px
+          1fr
+          27px;
+
+        padding: 12px;
+
+        gap: 10px;
+      }
+
+      .no {
+        width: 42px;
+        height: 42px;
+      }
+
+      .names {
+        font-size: 15px;
+      }
+
+      .statgrid {
+        grid-template-columns: 1fr;
+      }
+
+      .certstats {
+        grid-template-columns: 1fr;
+      }
+
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      #installBox {
+        right: 10px;
+        bottom: 10px;
+        width: calc(100% - 20px);
+      }
+    }
+
+    /* =========================
+       PRINT
+    ========================= */
+
+    @media print {
+
+      .topbar,
+      .tabs,
+      .btn,
+      .gear,
+      #installBox {
+        display: none !important;
+      }
+
+      body {
+        background: white;
+      }
+
+      .cert {
+        width: 100%;
+        margin: 0;
+        box-shadow: none;
+        border: 2px solid #222;
+      }
+
+    }
+  </style>
 </head>
+
 <body>
-<div id="app"><div class="loading">Memuat aplikasi…</div></div>
-<div id="installBox" class="install-box" hidden>
-  <div><strong>Pasang Aplikasi</strong><small>Tambahkan Pemilihan OSIS ke perangkat ini.</small></div>
-  <button id="installBtn" class="btn btn-primary small">Install</button>
-</div>
-<script src="config.js"></script>
-<script src="app.js"></script>
+
+  <div id="app"></div>
+
+  <!-- =========================
+       INSTALL PWA
+  ========================= -->
+
+  <div id="installBox" hidden>
+
+    <strong>
+      📱 Pasang Aplikasi Pemilihan OSIS
+    </strong>
+
+    <p>
+      Pasang aplikasi agar dapat dibuka
+      seperti aplikasi biasa di komputer
+      maupun HP.
+    </p>
+
+    <button
+      id="installBtn"
+      class="btn btn-primary"
+    >
+      Instal Aplikasi
+    </button>
+
+  </div>
+
+
+  <!-- =========================
+       KONFIGURASI
+  ========================= -->
+
+  <script>
+
+    window.APP_CONFIG = {
+
+      APP_NAME:
+        "Pemilihan Ketua OSIS",
+
+      SCHOOL:
+        "SMP NEGERI 1 RAMBANG NIRU",
+
+      /*
+        URL Web App Apps Script Anda.
+        JANGAN diganti dengan URL GitHub.
+      */
+
+      API_URL:
+        "https://script.google.com/macros/s/AKfycbxaodCn1qHb75ssvk-M_JnM2lr4no1UQ2dT-TgPvVacmtlt8QFNyo_EHmfKC_4rsaRlpg/exec"
+
+    };
+
+  </script>
+
+
+  <!-- =========================
+       APP JS
+  ========================= -->
+
+  <script src="app.js?v=10"></script>
+
 </body>
 </html>
