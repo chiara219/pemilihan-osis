@@ -1,20 +1,18 @@
-const CACHE = "osis-pwa-v2";
+const CACHE_NAME = "pemilihan-osis-v3";
 
-const ASSETS = [
+const APP_FILES = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
   "./config.js",
-  "./manifest.json",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./manifest.json"
 ];
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE)
-      .then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(APP_FILES))
       .then(() => self.skipWaiting())
   );
 });
@@ -24,7 +22,7 @@ self.addEventListener("activate", event => {
     caches.keys().then(keys =>
       Promise.all(
         keys
-          .filter(key => key !== CACHE)
+          .filter(key => key !== CACHE_NAME)
           .map(key => caches.delete(key))
       )
     ).then(() => self.clients.claim())
@@ -35,44 +33,47 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // Jangan pernah meng-cache komunikasi API.
-  // Apps Script harus selalu diambil langsung dari server.
+  // Jangan cache komunikasi dengan Apps Script.
   if (
-    url.hostname.includes("script.google.com") ||
-    url.hostname.includes("googleusercontent.com")
+    url.hostname === "script.google.com" ||
+    url.hostname.endsWith(".googleusercontent.com")
   ) {
     return;
   }
 
-  // Hanya cache file dari GitHub Pages sendiri.
-  if (url.origin !== location.origin) {
+  if (url.origin !== self.location.origin) {
     return;
   }
 
-  // Untuk HTML navigasi, selalu coba versi terbaru terlebih dahulu.
+  // Untuk halaman utama selalu coba versi terbaru.
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
         .then(response => {
           const copy = response.clone();
-          caches.open(CACHE).then(cache => {
+
+          caches.open(CACHE_NAME).then(cache => {
             cache.put(request, copy);
           });
+
           return response;
         })
         .catch(() => caches.match(request))
     );
+
     return;
   }
 
-  // File aplikasi: network first, cache sebagai cadangan.
+  // File aplikasi: network first.
   event.respondWith(
     fetch(request)
       .then(response => {
         const copy = response.clone();
-        caches.open(CACHE).then(cache => {
+
+        caches.open(CACHE_NAME).then(cache => {
           cache.put(request, copy);
         });
+
         return response;
       })
       .catch(() => caches.match(request))
