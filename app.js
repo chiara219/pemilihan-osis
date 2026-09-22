@@ -536,14 +536,16 @@ function vote() {
       : [];
 
 
-  const rows = (state.candidates || [])
+ const rows = (state.candidates || [])
   .map(c => {
 
-    const ketuaFoto =
-      `image/calon${encodeURIComponent(c.no)}-ketua.jpeg`;
+    const no = String(c.no);
 
-    const wakilFoto =
-      `image/calon${encodeURIComponent(c.no)}-wakil.jpeg`;
+    const fotoKetua =
+      `image/calon${no}-ketua.jpeg`;
+
+    const fotoWakil =
+      `image/calon${no}-wakil.jpeg`;
 
     return `
       <div
@@ -556,45 +558,58 @@ function vote() {
           ${esc(c.no)}
         </div>
 
-        <div class="candphotos">
+        <div class="candidate-photos">
 
           <div class="candidate-person">
 
             <img
-              src="${ketuaFoto}"
-              alt="Foto Ketua"
+              src="${fotoKetua}"
+              alt="Foto ${esc(c.ketua)}"
               class="candidate-photo"
               onerror="this.style.display='none'"
             >
 
-            <span>
-              Ketua
-            </span>
+            <div class="candidate-role">
+              KETUA
+            </div>
+
+            <div class="candidate-name">
+              ${esc(c.ketua)}
+            </div>
 
           </div>
 
-          <div class="candidate-person">
+          ${
+            c.wakil
+              ? `
+                <div class="candidate-person">
 
-            <img
-              src="${wakilFoto}"
-              alt="Foto Wakil"
-              class="candidate-photo"
-              onerror="this.style.display='none'"
-            >
+                  <img
+                    src="${fotoWakil}"
+                    alt="Foto ${esc(c.wakil)}"
+                    class="candidate-photo"
+                    onerror="this.style.display='none'"
+                  >
 
-            <span>
-              Wakil
-            </span>
+                  <div class="candidate-role">
+                    WAKIL
+                  </div>
 
-          </div>
+                  <div class="candidate-name">
+                    ${esc(c.wakil)}
+                  </div>
+
+                </div>
+              `
+              : ""
+          }
 
         </div>
 
         <div class="candinfo">
 
           <p class="names">
-            ${esc(c.ketua)}
-            ${c.wakil ? " & " + esc(c.wakil) : ""}
+            Pasangan No. ${esc(c.no)}
           </p>
 
           <p class="visi">
@@ -607,6 +622,7 @@ function vote() {
 
       </div>
     `;
+
   })
   .join("");
 
