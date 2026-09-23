@@ -1149,3 +1149,67 @@ textarea:focus{
     grid-row: 1 !important;
   }
 }
+Ubah HANYA tampilan visual pada file style.css ini.
+
+JANGAN mengubah file lain.
+JANGAN mengubah index.html.
+JANGAN mengubah app.js.
+JANGAN mengubah manifest.json.
+JANGAN mengubah struktur HTML.
+JANGAN mengubah fungsi aplikasi.
+JANGAN mengubah URL API.
+JANGAN mengubah logo.
+JANGAN mengubah URL atau tampilan foto kandidat.
+
+Buat override CSS di bagian PALING BAWAH file ini dengan ketentuan:
+
+1. Background utama aplikasi:
+   ubah menjadi warna ungu/lavender MUTED yang lembut dan elegan.
+   Gunakan nuansa seperti:
+   #E8E2F0
+   atau #EEEAF4
+   Jangan gunakan ungu terang.
+
+2. Tulisan "PEMILIHAN KETUA & WAKIL KETUA OSIS"
+   gunakan warna hijau tua:
+   #14532D
+
+3. Tulisan "SMP NEGERI 1 RAMBANG NIRU"
+   gunakan hijau muda:
+   #4D9F70
+   Jangan putih.
+
+4. Kotak/card "PILIH PASANGAN CALON":
+   jangan lagi menggunakan putih polos.
+   Gunakan warna muted lavender:
+   #F1EDF5
+   dengan border:
+   #D8CEE2
+
+5. Pertahankan logo yang sudah ada.
+   Jangan mengubah ukuran, sumber, atau posisi logo kecuali hanya untuk menjaga kerapian.
+
+6. Pertahankan foto ketua dan wakil.
+   Jangan mengubah URL foto.
+   Jangan menyembunyikan foto.
+
+7. Warna nama kandidat:
+   #10233F
+
+8. Label KETUA dan WAKIL:
+   #166534
+
+9. Nomor pasangan:
+   tetap gunakan warna biru yang sudah ada.
+
+10. Buat tampilan:
+   modern, elegan, premium, lembut, profesional,
+   perpaduan ungu lavender muted dan hijau sekolah.
+
+11. Pastikan responsive dan tetap bagus pada:
+   HP Android, iPhone, Chromebook, laptop Windows, dan desktop.
+
+12. Jangan menghapus CSS lama.
+   Letakkan CSS override baru di BAGIAN PALING BAWAH file style.css.
+
+Setelah selesai, simpan perubahan pada style.css.
