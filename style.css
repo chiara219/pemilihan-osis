@@ -1166,7 +1166,7 @@ textarea:focus{
 
 /* LATAR UTAMA */
 body {
-  background: #e8e2f0 !important;
+  background: #bb80f2 !important;
 }
 
 /* AREA HERO / BAGIAN ATAS */
@@ -1184,14 +1184,14 @@ body {
 .hero h1,
 .hero .title,
 .hero-title {
-  color: #14532d !important;
+  color: #156b3c!important;
 }
 
 /* SUBJUDUL SMP NEGERI 1 RAMBANG NIRU */
 .hero p,
 .hero .subtitle,
 .hero-subtitle {
-  color:  #bb87eb!important;
+  color:  #24a65f!important;
 }
 
 /* HEADER */
