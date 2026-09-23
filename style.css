@@ -1191,7 +1191,7 @@ body {
 .hero p,
 .hero .subtitle,
 .hero-subtitle {
-  color:  #87CEEB !important;
+  color:  #bb87eb!important;
 }
 
 /* HEADER */
@@ -1199,7 +1199,7 @@ header,
 .topbar,
 .navbar,
 .app-header {
-  background: #f8f6fa !important;
+  background: #a759f0 !important;
 }
 
 /* NAMA SEKOLAH */
@@ -1207,7 +1207,7 @@ header .school,
 header .school-name,
 .topbar .school,
 .brand-school {
-  color: #4d9f70 !important;
+  color: #410f70 !important;
 }
 
 /* JUDUL APLIKASI */
