@@ -1149,67 +1149,145 @@ textarea:focus{
     grid-row: 1 !important;
   }
 }
-Ubah HANYA tampilan visual pada file style.css ini.
+/* =========================================================
+   TEMA PEMILIHAN OSIS - LAVENDER MUTED + HIJAU SEKOLAH
+   OVERRIDE TAMPILAN SAJA
+   ========================================================= */
 
-JANGAN mengubah file lain.
-JANGAN mengubah index.html.
-JANGAN mengubah app.js.
-JANGAN mengubah manifest.json.
-JANGAN mengubah struktur HTML.
-JANGAN mengubah fungsi aplikasi.
-JANGAN mengubah URL API.
-JANGAN mengubah logo.
-JANGAN mengubah URL atau tampilan foto kandidat.
+:root {
+  --bg: #e8e2f0 !important;
+  --white: #f8f6fa !important;
+  --line: #d8cee2 !important;
+  --dark: #10233f !important;
+  --muted: #64748b !important;
+  --green: #14532d !important;
+  --green-light: #4d9f70 !important;
+}
 
-Buat override CSS di bagian PALING BAWAH file ini dengan ketentuan:
+/* LATAR UTAMA */
+body {
+  background: #e8e2f0 !important;
+}
 
-1. Background utama aplikasi:
-   ubah menjadi warna ungu/lavender MUTED yang lembut dan elegan.
-   Gunakan nuansa seperti:
-   #E8E2F0
-   atau #EEEAF4
-   Jangan gunakan ungu terang.
+/* AREA HERO / BAGIAN ATAS */
+.hero,
+.hero-section,
+.hero-banner {
+  background: linear-gradient(
+    135deg,
+    #e8e2f0 0%,
+    #ddd5e8 100%
+  ) !important;
+}
 
-2. Tulisan "PEMILIHAN KETUA & WAKIL KETUA OSIS"
-   gunakan warna hijau tua:
-   #14532D
+/* JUDUL DI BAWAH LOGO */
+.hero h1,
+.hero .title,
+.hero-title {
+  color: #14532d !important;
+}
 
-3. Tulisan "SMP NEGERI 1 RAMBANG NIRU"
-   gunakan hijau muda:
-   #4D9F70
-   Jangan putih.
+/* SUBJUDUL SMP NEGERI 1 RAMBANG NIRU */
+.hero p,
+.hero .subtitle,
+.hero-subtitle {
+  color: #4d9f70 !important;
+}
 
-4. Kotak/card "PILIH PASANGAN CALON":
-   jangan lagi menggunakan putih polos.
-   Gunakan warna muted lavender:
-   #F1EDF5
-   dengan border:
-   #D8CEE2
+/* HEADER */
+header,
+.topbar,
+.navbar,
+.app-header {
+  background: #f8f6fa !important;
+}
 
-5. Pertahankan logo yang sudah ada.
-   Jangan mengubah ukuran, sumber, atau posisi logo kecuali hanya untuk menjaga kerapian.
+/* NAMA SEKOLAH */
+header .school,
+header .school-name,
+.topbar .school,
+.brand-school {
+  color: #4d9f70 !important;
+}
 
-6. Pertahankan foto ketua dan wakil.
-   Jangan mengubah URL foto.
-   Jangan menyembunyikan foto.
+/* JUDUL APLIKASI */
+header h1,
+header .app-title,
+.topbar .app-title,
+.brand-title {
+  color: #14532d !important;
+}
 
-7. Warna nama kandidat:
-   #10233F
+/* AREA KONTEN */
+main,
+.container,
+.app,
+.sheet {
+  background-color: transparent !important;
+}
 
-8. Label KETUA dan WAKIL:
-   #166534
+/* KARTU PEMILIHAN */
+.cand,
+.candidate-card,
+.candidate,
+.ballot-card {
+  background: #f1edf5 !important;
+  border-color: #d8cee2 !important;
+}
 
-9. Nomor pasangan:
-   tetap gunakan warna biru yang sudah ada.
+/* KARTU TERPILIH */
+.cand.selected,
+.candidate-card.selected,
+.candidate.selected,
+.ballot-card.selected {
+  background: #ebe3f2 !important;
+  border-color: #166534 !important;
+}
 
-10. Buat tampilan:
-   modern, elegan, premium, lembut, profesional,
-   perpaduan ungu lavender muted dan hijau sekolah.
+/* JUDUL PILIH PASANGAN */
+.candinfo .names,
+.names {
+  color: #10233f !important;
+}
 
-11. Pastikan responsive dan tetap bagus pada:
-   HP Android, iPhone, Chromebook, laptop Windows, dan desktop.
+/* VISI */
+.candinfo .visi,
+.visi {
+  color: #64748b !important;
+}
 
-12. Jangan menghapus CSS lama.
-   Letakkan CSS override baru di BAGIAN PALING BAWAH file style.css.
+/* LABEL KETUA / WAKIL */
+.candidate-role {
+  color: #166534 !important;
+}
 
-Setelah selesai, simpan perubahan pada style.css.
+/* NAMA KETUA / WAKIL */
+.candidate-name {
+  color: #10233f !important;
+}
+
+/* NOMOR PASANGAN */
+.no {
+  background: #0d47a1 !important;
+  color: #ffffff !important;
+}
+
+/* FOTO */
+.candidate-photo {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* RESPONSIVE HP */
+@media (max-width: 768px) {
+  body {
+    background: #e8e2f0 !important;
+  }
+
+  .cand,
+  .candidate-card,
+  .candidate,
+  .ballot-card {
+    background: #f1edf5 !important;
+  }
+}
