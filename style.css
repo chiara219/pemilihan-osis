@@ -1291,3 +1291,112 @@ main,
     background: #f1edf5 !important;
   }
 }
+/* =========================================================
+   PERBAIKAN FOTO CALON - SIGAP PEMILIHAN OSIS
+   ========================================================= */
+
+.candidate-photos {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 18px !important;
+  width: 100% !important;
+  min-height: 190px !important;
+  flex-shrink: 0 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.candidate-person {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 120px !important;
+  min-width: 120px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.candidate-photo {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+
+  width: 120px !important;
+  height: 150px !important;
+
+  min-width: 120px !important;
+  min-height: 150px !important;
+
+  max-width: 120px !important;
+  max-height: 150px !important;
+
+  object-fit: cover !important;
+  object-position: center !important;
+
+  border-radius: 14px !important;
+  margin: 0 auto 8px !important;
+
+  position: relative !important;
+  z-index: 5 !important;
+}
+
+.candidate-photo-placeholder {
+  display: none !important;
+}
+
+.candidate-role {
+  display: block !important;
+  text-align: center !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  margin-top: 2px !important;
+  visibility: visible !important;
+}
+
+.candidate-name {
+  display: block !important;
+  text-align: center !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  margin-top: 5px !important;
+  visibility: visible !important;
+}
+
+/* kartu calon */
+.cand {
+  overflow: visible !important;
+}
+
+.candinfo {
+  min-width: 150px !important;
+}
+
+/* HP */
+@media (max-width: 700px) {
+
+  .candidate-photos {
+    gap: 10px !important;
+  }
+
+  .candidate-person {
+    width: 100px !important;
+    min-width: 100px !important;
+  }
+
+  .candidate-photo {
+    width: 100px !important;
+    height: 125px !important;
+    min-width: 100px !important;
+    min-height: 125px !important;
+    max-width: 100px !important;
+    max-height: 125px !important;
+  }
+
+  .candidate-name {
+    font-size: 12px !important;
+  }
+}
