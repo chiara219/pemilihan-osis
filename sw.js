@@ -1,4 +1,4 @@
-const CACHE_NAME = "pemilihan-osis-v3";
+const CACHE_NAME = "pemilihan-osis-v4";
 
 const APP_FILES = [
   "./",
@@ -6,7 +6,9 @@ const APP_FILES = [
   "./style.css",
   "./app.js",
   "./config.js",
-  "./manifest.json"
+  "./manifest.json",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png"
 ];
 
 self.addEventListener("install", event => {
@@ -30,10 +32,11 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
+
   const request = event.request;
   const url = new URL(request.url);
 
-  // Jangan cache komunikasi dengan Apps Script.
+  /* JANGAN cache komunikasi Apps Script */
   if (
     url.hostname === "script.google.com" ||
     url.hostname.endsWith(".googleusercontent.com")
@@ -41,41 +44,56 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  /* Resource dari domain lain */
   if (url.origin !== self.location.origin) {
     return;
   }
 
-  // Untuk halaman utama selalu coba versi terbaru.
+  /* Halaman utama */
   if (request.mode === "navigate") {
+
     event.respondWith(
       fetch(request)
         .then(response => {
+
           const copy = response.clone();
 
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, copy);
-          });
+          caches.open(CACHE_NAME)
+            .then(cache => cache.put(request, copy));
 
           return response;
         })
-        .catch(() => caches.match(request))
+        .catch(() => {
+          return caches.match(request)
+            .then(cached => {
+              return cached || caches.match("./index.html");
+            });
+        })
     );
 
     return;
   }
 
-  // File aplikasi: network first.
+  /* File aplikasi */
   event.respondWith(
+
     fetch(request)
       .then(response => {
-        const copy = response.clone();
 
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(request, copy);
-        });
+        if (response && response.status === 200) {
+
+          const copy = response.clone();
+
+          caches.open(CACHE_NAME)
+            .then(cache => cache.put(request, copy));
+        }
 
         return response;
       })
-      .catch(() => caches.match(request))
+
+      .catch(() => {
+
+        return caches.match(request);
+      })
   );
 });
