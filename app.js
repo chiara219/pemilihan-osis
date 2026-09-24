@@ -16,35 +16,14 @@ let s = {
   voters: [],
   search: "",
   modal: null,
-  busy: false,
-  delid: "",
-  delkey: ""
+  busy: false
 };
 
 let installPrompt = null;
 
 
 /* =========================
-   URL FOTO GITHUB
-========================= */
-
-const IMAGE_BASE_URL =
-  "https://chiara219.github.io/pemilihan-osis/images/";
-
-function getCandidatePhoto(no, type) {
-  return (
-    IMAGE_BASE_URL +
-    "calon" +
-    String(no) +
-    "-" +
-    type +
-    ".jpeg"
-  );
-}
-
-
-/* =========================
-   UTILITIES
+   UTILITY
 ========================= */
 
 function esc(x) {
@@ -86,103 +65,116 @@ function toast(m, err = false) {
 
 
 /* =========================
-   FOTO KANDIDAT
-========================= */
-
-function candidatePhoto(url, nama, type) {
-
-  const clean = String(url || "").trim();
-
-  if (clean) {
-
-    return `
-      <img
-        class="candidate-photo"
-        src="${esc(clean)}"
-        alt="${esc(nama || type)}"
-        loading="lazy"
-        onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';"
-      >
-
-      <div
-        class="candidate-photo-placeholder"
-        style="display:none"
-      >
-        ${type === "ketua" ? "K" : "W"}
-      </div>
-    `;
-
-  }
-
-  return `
-    <div class="candidate-photo-placeholder">
-      ${type === "ketua" ? "K" : "W"}
-    </div>
-  `;
-}
-
-
-/* =========================
-   API
+   API DENGAN RETRY 3X
 ========================= */
 
 function api(action, params = {}) {
 
-  return new Promise((resolve, reject) => {
+  const MAX_RETRY = 3;
+  const RETRY_DELAY = 1500;
 
-    const cb =
-      "osisCb_" +
-      Date.now() +
-      "_" +
-      Math.random().toString(36).slice(2);
+  function request(attempt) {
 
-    const sc = document.createElement("script");
+    return new Promise((resolve, reject) => {
 
-    const q = new URLSearchParams({
-      action: action,
-      callback: cb,
-      _ts: String(Date.now())
-    });
+      const cb =
+        "osisCb_" +
+        Date.now() +
+        "_" +
+        Math.random().toString(36).slice(2);
 
-    Object.keys(params).forEach(k => {
-      q.set(k, params[k] ?? "");
-    });
+      const sc = document.createElement("script");
 
-    let done = false;
+      const q = new URLSearchParams({
+        action: action,
+        callback: cb,
+        _ts: String(Date.now())
+      });
 
-    window[cb] = (data) => {
-      done = true;
-      cleanup();
-      resolve(data);
-    };
+      Object.keys(params).forEach(k => {
+        q.set(k, params[k] ?? "");
+      });
 
-    function cleanup() {
-      delete window[cb];
+      let done = false;
 
-      if (sc.parentNode) {
-        sc.parentNode.removeChild(sc);
+      function cleanup() {
+        delete window[cb];
+
+        if (sc.parentNode) {
+          sc.parentNode.removeChild(sc);
+        }
       }
-    }
 
-    sc.onerror = () => {
-      cleanup();
-      reject(new Error("Gagal menghubungi server"));
-    };
+      function retryOrReject(message) {
 
-    sc.src = C.API_URL + "?" + q.toString();
-
-    document.body.appendChild(sc);
-
-    setTimeout(() => {
-
-      if (!done) {
         cleanup();
-        reject(new Error("Server tidak merespons"));
+
+        if (attempt < MAX_RETRY) {
+
+          setTimeout(() => {
+
+            request(attempt + 1)
+              .then(resolve)
+              .catch(reject);
+
+          }, RETRY_DELAY);
+
+        } else {
+
+          reject(new Error(message));
+
+        }
       }
 
-    }, 20000);
+      window[cb] = (data) => {
 
-  });
+        if (done) return;
+
+        done = true;
+
+        cleanup();
+
+        resolve(data);
+      };
+
+
+      sc.onerror = () => {
+
+        if (done) return;
+
+        done = true;
+
+        retryOrReject(
+          "Gagal menghubungi server setelah 3 percobaan."
+        );
+
+      };
+
+
+      sc.src = C.API_URL + "?" + q.toString();
+
+      document.body.appendChild(sc);
+
+
+      setTimeout(() => {
+
+        if (!done) {
+
+          done = true;
+
+          retryOrReject(
+            "Server tidak merespons setelah 3 percobaan."
+          );
+
+        }
+
+      }, 20000);
+
+    });
+
+  }
+
+  return request(1);
 }
 
 
@@ -207,12 +199,17 @@ async function refresh(silent = false) {
   } catch (e) {
 
     if (!state) {
+
       renderError(e.message);
+
     } else {
+
       toast(e.message, true);
+
     }
 
   }
+
 }
 
 
@@ -256,6 +253,7 @@ function header() {
 
     </div>
   `;
+
 }
 
 
@@ -268,26 +266,18 @@ function render() {
   let h = header();
 
   if (s.view === "adminLogin") {
-
     h += login();
 
   } else if (s.view === "admin") {
-
     h += admin();
 
   } else {
-
     h += vote();
-
   }
 
   h += modal();
 
-  const app = document.getElementById("app");
-
-  if (app) {
-    app.innerHTML = h;
-  }
+  document.getElementById("app").innerHTML = h;
 
 }
 
@@ -298,12 +288,10 @@ function render() {
 
 function renderError(m) {
 
-  const app = document.getElementById("app");
+  document.getElementById("app").innerHTML =
 
-  if (!app) return;
-
-  app.innerHTML =
     header() +
+
     `
     <main class="container">
 
@@ -319,12 +307,8 @@ function renderError(m) {
 
         <p class="sub">
           ${esc(m)}
-
           <br><br>
-
-          Pastikan Apps Script sudah di-deploy
-          sebagai Web App dan aksesnya dapat
-          digunakan oleh pengguna aplikasi.
+          Pastikan Apps Script sudah di-deploy sebagai Web App dan aksesnya dapat digunakan oleh pengguna aplikasi.
         </p>
 
         <button
@@ -338,38 +322,33 @@ function renderError(m) {
 
     </main>
     `;
+
 }
 
 
 /* =========================
-   VOTING
+   VOTE
 ========================= */
 
 function vote() {
 
-  if (!state) {
+  if (!state)
 
     return `
       <main class="container">
-
         <section class="sheet">
-
           <p class="sub">
             Memuat data pemilihan…
           </p>
-
         </section>
-
       </main>
     `;
 
-  }
 
-  if (state.status === "setup") {
+  if (state.status === "setup")
 
     return `
       <main class="container">
-
         <section class="sheet">
 
           <p class="eyebrow">
@@ -392,17 +371,16 @@ function vote() {
           </button>
 
         </section>
-
       </main>
     `;
 
-  }
 
   if (state.status === "closed") {
     return winner(false);
   }
 
-  if (s.step === "identitas") {
+
+  if (s.step === "identitas")
 
     return `
       <main class="container">
@@ -424,8 +402,7 @@ function vote() {
 
           <p class="sub">
             Masukkan nama dan kelas dengan benar.
-            Setiap pemilih hanya dapat memberikan
-            satu suara.
+            Setiap pemilih hanya dapat memberikan satu suara.
           </p>
 
           <label>
@@ -465,9 +442,8 @@ function vote() {
       </main>
     `;
 
-  }
 
-  if (s.step === "sudah") {
+  if (s.step === "sudah")
 
     return `
       <main class="container">
@@ -488,8 +464,7 @@ function vote() {
             </h1>
 
             <p class="sub">
-              Nama dan kelas ini sudah tercatat
-              memberikan suara sebelumnya.
+              Nama dan kelas ini sudah tercatat memberikan suara sebelumnya.
             </p>
 
             <button
@@ -506,16 +481,17 @@ function vote() {
       </main>
     `;
 
-  }
 
-  if (s.step === "thanks") {
+  if (s.step === "thanks")
 
     return `
       <main class="container">
 
         <section class="sheet">
 
-          <div style="text-align:center;padding:35px 0">
+          <div
+            style="text-align:center;padding:35px 0"
+          >
 
             <div class="seal">
               ✓
@@ -530,8 +506,7 @@ function vote() {
 
             <p class="sub">
               Suaramu sudah tersimpan.
-              Silakan serahkan perangkat kepada
-              pemilih berikutnya.
+              Silakan serahkan perangkat kepada pemilih berikutnya.
             </p>
 
           </div>
@@ -541,27 +516,11 @@ function vote() {
       </main>
     `;
 
-  }
 
+  const rows = state.candidates
 
-  const candidates =
-    Array.isArray(state.candidates)
-      ? state.candidates
-      : [];
+    .map(c => `
 
-
-  const rows = (state.candidates || [])
-  .map(c => {
-
-    const no = String(c.no);
-
-    const fotoKetua =
-      `https://raw.githubusercontent.com/chiara219/pemilihan-osis/main/images/calon${no}-ketua.jpeg`;
-
-    const fotoWakil =
-      `https://raw.githubusercontent.com/chiara219/pemilihan-osis/main/images/calon${no}-wakil.jpeg`;
-
-    return `
       <div
         class="cand ${s.selected === c.id ? "selected" : ""}"
         data-a="select"
@@ -572,85 +531,11 @@ function vote() {
           ${esc(c.no)}
         </div>
 
-        <div class="candidate-photos">
-
-          <!-- KETUA -->
-          <div class="candidate-person">
-
-            <img
-              src="${fotoKetua}"
-              alt="${esc(c.ketua)}"
-              class="candidate-photo"
-              loading="eager"
-              onerror="
-                this.style.display='none';
-                this.nextElementSibling.style.display='flex';
-              "
-            >
-
-            <div
-              class="candidate-photo-placeholder"
-              style="display:none"
-            >
-              K
-            </div>
-
-            <div class="candidate-role">
-              KETUA
-            </div>
-
-            <div class="candidate-name">
-              ${esc(c.ketua)}
-            </div>
-
-          </div>
-
-
-          <!-- WAKIL -->
-          ${
-            c.wakil
-              ? `
-                <div class="candidate-person">
-
-                  <img
-                    src="${fotoWakil}"
-                    alt="${esc(c.wakil)}"
-                    class="candidate-photo"
-                    loading="eager"
-                    onerror="
-                      this.style.display='none';
-                      this.nextElementSibling.style.display='flex';
-                    "
-                  >
-
-                  <div
-                    class="candidate-photo-placeholder"
-                    style="display:none"
-                  >
-                    W
-                  </div>
-
-                  <div class="candidate-role">
-                    WAKIL
-                  </div>
-
-                  <div class="candidate-name">
-                    ${esc(c.wakil)}
-                  </div>
-
-                </div>
-              `
-              : ""
-          }
-
-        </div>
-
-
-        <!-- INFORMASI PASANGAN -->
         <div class="candinfo">
 
           <p class="names">
-            Pasangan No. ${esc(c.no)}
+            ${esc(c.ketua)}
+            ${c.wakil ? " & " + esc(c.wakil) : ""}
           </p>
 
           <p class="visi">
@@ -659,16 +544,17 @@ function vote() {
 
         </div>
 
-
-        <!-- RADIO / CEKLIS -->
         <div class="check"></div>
 
       </div>
-    `;
-  })
-  .join("");
+
+    `)
+
+    .join("");
+
 
   return `
+
     <main class="container">
 
       <section class="sheet">
@@ -689,23 +575,11 @@ function vote() {
         </h1>
 
         <p class="sub">
-          Terdapat ${candidates.length}
-          pasangan calon.
-          Pilih salah satu pasangan.
+          Pilih salah satu pasangan calon,
+          lalu kunci pilihanmu.
         </p>
 
-        <div class="candidate-list">
-
-          ${
-            rows ||
-            `
-              <p class="mini">
-                Belum ada pasangan calon.
-              </p>
-            `
-          }
-
-        </div>
+        ${rows}
 
         <div style="height:8px"></div>
 
@@ -729,17 +603,20 @@ function vote() {
       </section>
 
     </main>
+
   `;
+
 }
 
 
 /* =========================
-   ADMIN LOGIN
+   LOGIN
 ========================= */
 
 function login() {
 
   return `
+
     <main class="container">
 
       <section class="sheet">
@@ -788,7 +665,9 @@ function login() {
       </section>
 
     </main>
+
   `;
+
 }
 
 
@@ -805,6 +684,7 @@ function admin() {
   ];
 
   return `
+
     <main class="admin-wrap">
 
       <div class="tabs">
@@ -832,7 +712,9 @@ function admin() {
       }
 
     </main>
+
   `;
+
 }
 
 
@@ -842,7 +724,7 @@ function admin() {
 
 function badge() {
 
-  if (state.status === "setup") {
+  if (state.status === "setup")
 
     return `
       <span
@@ -853,9 +735,8 @@ function badge() {
       </span>
     `;
 
-  }
 
-  if (state.status === "open") {
+  if (state.status === "open")
 
     return `
       <span class="status">
@@ -864,7 +745,6 @@ function badge() {
       </span>
     `;
 
-  }
 
   return `
     <span
@@ -874,56 +754,26 @@ function badge() {
       ● Sudah ditutup
     </span>
   `;
+
 }
 
 
 /* =========================
-   ADMIN - CANDIDATES
+   CANDIDATES
 ========================= */
 
 function tabCandidates() {
 
   const locked = state.status !== "setup";
 
-  const candidates =
-    Array.isArray(state.candidates)
-      ? state.candidates
-      : [];
+  const list = state.candidates
 
-
-  const list = candidates
     .map(c => `
 
-      <div class="list candidate-admin-card">
+      <div class="list">
 
         <div class="chip">
           ${esc(c.no)}
-        </div>
-
-        <div class="admin-mini-photos">
-
-          <div>
-            ${candidatePhoto(
-              c.fotoKetua ||
-              c.photoKetua ||
-              c.ketuaFoto ||
-              getCandidatePhoto(c.no, "ketua"),
-              c.ketua,
-              "ketua"
-            )}
-          </div>
-
-          <div>
-            ${candidatePhoto(
-              c.fotoWakil ||
-              c.photoWakil ||
-              c.wakilFoto ||
-              getCandidatePhoto(c.no, "wakil"),
-              c.wakil,
-              "wakil"
-            )}
-          </div>
-
         </div>
 
         <div class="info">
@@ -956,10 +806,12 @@ function tabCandidates() {
       </div>
 
     `)
+
     .join("");
 
 
   return `
+
     <section class="panel">
 
       ${badge()}
@@ -969,8 +821,8 @@ function tabCandidates() {
       </h2>
 
       <p class="sub">
-        Total pasangan calon:
-        <strong>${candidates.length}</strong>
+        Minimal 2 pasangan calon diperlukan
+        sebelum pemilihan dibuka.
       </p>
 
       ${
@@ -995,57 +847,26 @@ function tabCandidates() {
 
             <input
               id="cNo"
-              placeholder="${candidates.length + 1}"
+              placeholder="${state.candidates.length + 1}"
             >
 
             <label>
               Nama calon ketua
             </label>
 
-            <input
-              id="cKetua"
-              placeholder="Nama lengkap ketua"
-            >
-
-            <label>
-              Foto Ketua
-            </label>
-
-            <input
-              id="cFotoKetua"
-              type="url"
-              placeholder="Tempel URL foto Ketua"
-              autocomplete="off"
-            >
+            <input id="cKetua">
 
             <label>
               Nama calon wakil
             </label>
 
-            <input
-              id="cWakil"
-              placeholder="Nama lengkap wakil"
-            >
-
-            <label>
-              Foto Wakil
-            </label>
-
-            <input
-              id="cFotoWakil"
-              type="url"
-              placeholder="Tempel URL foto Wakil"
-              autocomplete="off"
-            >
+            <input id="cWakil">
 
             <label>
               Visi / moto singkat
             </label>
 
-            <textarea
-              id="cVisi"
-              placeholder="Visi atau moto pasangan"
-            ></textarea>
+            <textarea id="cVisi"></textarea>
 
             <div style="height:12px"></div>
 
@@ -1055,11 +876,13 @@ function tabCandidates() {
             >
               Tambah Calon
             </button>
+
           `
       }
 
       ${
         state.status === "setup"
+
           ? `
 
             <div class="divider"></div>
@@ -1067,26 +890,25 @@ function tabCandidates() {
             <button
               class="btn btn-primary"
               data-a="openElection"
-              ${
-                candidates.length < 2
-                  ? "disabled"
-                  : ""
-              }
+              ${state.candidates.length < 2 ? "disabled" : ""}
             >
               Buka Pemilihan
             </button>
 
           `
+
           : ""
       }
 
     </section>
+
   `;
+
 }
 
 
 /* =========================
-   ADMIN - RECAP
+   RECAP
 ========================= */
 
 function tabRecap() {
@@ -1095,7 +917,7 @@ function tabRecap() {
 
   let max = 0;
 
-  (state.candidates || []).forEach(c => {
+  state.candidates.forEach(c => {
 
     max = Math.max(
       max,
@@ -1105,24 +927,29 @@ function tabRecap() {
   });
 
 
-  const bars = (state.candidates || [])
+  const bars = state.candidates
+
     .slice()
+
     .sort(
       (a, b) =>
         (state.votes[b.id] || 0) -
         (state.votes[a.id] || 0)
     )
+
     .map(c => {
 
-      const v = state.votes[c.id] || 0;
+      let v = state.votes[c.id] || 0;
 
-      const p = tv
-        ? Math.round(v / tv * 1000) / 10
-        : 0;
+      let p =
+        tv
+          ? Math.round(v / tv * 1000) / 10
+          : 0;
 
-      const w = max
-        ? Math.round(v / max * 100)
-        : 0;
+      let w =
+        max
+          ? Math.round(v / max * 100)
+          : 0;
 
       return `
 
@@ -1160,12 +987,14 @@ function tabRecap() {
       `;
 
     })
+
     .join("");
 
 
   const q = s.search.toLowerCase();
 
   const vv = s.voters
+
     .filter(
       v =>
         !q ||
@@ -1176,22 +1005,32 @@ function tabRecap() {
           .toLowerCase()
           .includes(q)
     )
+
     .slice()
     .reverse();
 
 
   const trs = vv
+
     .map(v => `
 
       <tr>
 
-        <td>${esc(v.nama)}</td>
+        <td>
+          ${esc(v.nama)}
+        </td>
 
-        <td>${esc(v.kelas)}</td>
+        <td>
+          ${esc(v.kelas)}
+        </td>
 
-        <td>No. ${esc(v.no)}</td>
+        <td>
+          No. ${esc(v.no)}
+        </td>
 
-        <td>${fmt(v.ts)}</td>
+        <td>
+          ${fmt(v.ts)}
+        </td>
 
         <td>
 
@@ -1208,10 +1047,12 @@ function tabRecap() {
       </tr>
 
     `)
+
     .join("");
 
 
   return `
+
     <section class="panel">
 
       ${badge()}
@@ -1290,7 +1131,7 @@ function tabRecap() {
 
             ${
               trs ||
-              '<tr><td colspan="5">Belum ada data.</td></tr>'
+              '<tr><td colspan="5">Belum ada data. Klik Muat ulang.</td></tr>'
             }
 
           </tbody>
@@ -1300,7 +1141,9 @@ function tabRecap() {
       </div>
 
     </section>
+
   `;
+
 }
 
 
@@ -1311,6 +1154,7 @@ function tabRecap() {
 function tabSettings() {
 
   return `
+
     <section class="panel">
 
       ${badge()}
@@ -1365,7 +1209,9 @@ function tabSettings() {
 
       ${
         state.status === "open"
+
           ? `
+
             <div class="divider"></div>
 
             <button
@@ -1375,12 +1221,15 @@ function tabSettings() {
             >
               Tutup Pemilihan & Tetapkan Pemenang
             </button>
+
           `
+
           : ""
       }
 
       ${
         state.status === "closed"
+
           ? `
 
             <div class="divider"></div>
@@ -1397,14 +1246,14 @@ function tabSettings() {
             </button>
 
           `
+
           : ""
       }
 
       <div class="divider"></div>
 
       <p class="sub">
-        Reset menghapus kandidat dan seluruh
-        suara secara permanen.
+        Reset menghapus kandidat dan seluruh suara secara permanen.
       </p>
 
       <button
@@ -1425,7 +1274,9 @@ function tabSettings() {
       </button>
 
     </section>
+
   `;
+
 }
 
 
@@ -1435,13 +1286,16 @@ function tabSettings() {
 
 function winner(preview) {
 
-  const w = state?.candidates?.find(
-    c => c.id === state.winnerId
-  );
+  const w =
+    state?.candidates?.find(
+      c => c.id === state.winnerId
+    );
 
-  if (!w) {
+
+  if (!w)
 
     return `
+
       <main class="container">
 
         <section class="sheet">
@@ -1457,30 +1311,18 @@ function winner(preview) {
         </section>
 
       </main>
-    `;
 
-  }
+    `;
 
 
   const tv = state.totalVoters || 0;
+
   const v = state.votes[w.id] || 0;
 
-  const p = tv
-    ? Math.round(v / tv * 1000) / 10
-    : 0;
-
-
-  const winnerKetuaPhoto =
-    w.fotoKetua ||
-    w.photoKetua ||
-    w.ketuaFoto ||
-    getCandidatePhoto(w.no, "ketua");
-
-  const winnerWakilPhoto =
-    w.fotoWakil ||
-    w.photoWakil ||
-    w.wakilFoto ||
-    getCandidatePhoto(w.no, "wakil");
+  const p =
+    tv
+      ? Math.round(v / tv * 1000) / 10
+      : 0;
 
 
   const inner = `
@@ -1495,42 +1337,6 @@ function winner(preview) {
         KETUA & WAKIL KETUA OSIS TERPILIH ·
         PERIODE ${esc(state.periode)}
       </p>
-
-      <div class="winner-photos">
-
-        <div>
-          ${candidatePhoto(
-            winnerKetuaPhoto,
-            w.ketua,
-            "ketua"
-          )}
-
-          <strong>
-            ${esc(w.ketua)}
-          </strong>
-
-          <span>
-            KETUA
-          </span>
-        </div>
-
-        <div>
-          ${candidatePhoto(
-            winnerWakilPhoto,
-            w.wakil,
-            "wakil"
-          )}
-
-          <strong>
-            ${esc(w.wakil || "-")}
-          </strong>
-
-          <span>
-            WAKIL
-          </span>
-        </div>
-
-      </div>
 
       <h1>
         ${esc(w.ketua)}
@@ -1570,7 +1376,6 @@ function winner(preview) {
           ? ""
           : `
             <div style="height:16px"></div>
-
             <button
               class="btn btn-dark"
               data-a="print"
@@ -1581,16 +1386,13 @@ function winner(preview) {
       }
 
     </section>
+
   `;
 
 
   return preview
     ? inner
-    : `
-      <main class="container">
-        ${inner}
-      </main>
-    `;
+    : `<main class="container">${inner}</main>`;
 
 }
 
@@ -1609,23 +1411,21 @@ function modal() {
 
   if (s.modal === "confirm") {
 
-    const c = state.candidates.find(
-      x => x.id === s.selected
-    );
+    let c =
+      state.candidates.find(
+        x => x.id === s.selected
+      );
 
     title = "Konfirmasi pilihan";
 
     body = `
-      Kamu memilih pasangan nomor
-      ${esc(c.no)}:
-
+      Kamu memilih pasangan nomor ${c.no}:
       <strong>
         ${esc(c.ketua)}
         ${c.wakil ? " & " + esc(c.wakil) : ""}
       </strong>.
 
-      Pilihan tidak dapat diubah setelah
-      dikonfirmasi.
+      Pilihan tidak dapat diubah setelah dikonfirmasi.
     `;
 
   }
@@ -1635,21 +1435,27 @@ function modal() {
 
     title = "Tutup pemilihan?";
 
-    const sorted = state.candidates
-      .slice()
-      .sort(
-        (a, b) =>
-          (state.votes[b.id] || 0) -
-          (state.votes[a.id] || 0)
+    const sorted =
+      state.candidates
+        .slice()
+        .sort(
+          (a, b) =>
+            (state.votes[b.id] || 0) -
+            (state.votes[a.id] || 0)
+        );
+
+
+    const top =
+      sorted.length
+        ? state.votes[sorted[0].id] || 0
+        : 0;
+
+
+    const tied =
+      sorted.filter(
+        c =>
+          (state.votes[c.id] || 0) === top
       );
-
-    const top = sorted.length
-      ? state.votes[sorted[0].id] || 0
-      : 0;
-
-    const tied = sorted.filter(
-      c => (state.votes[c.id] || 0) === top
-    );
 
 
     if (tied.length > 1 && top > 0) {
@@ -1661,7 +1467,11 @@ function modal() {
         top +
         " suara). Panitia harus menentukan pemenang:" +
 
-        `<div style="margin-top:12px;text-align:left">` +
+        `
+        <div
+          style="margin-top:12px;text-align:left"
+        >
+        ` +
 
         tied.map(c => `
 
@@ -1683,13 +1493,12 @@ function modal() {
 
         `).join("") +
 
-        "</div>";
+        `</div>`;
 
     } else {
 
       body =
-        "Setelah ditutup, pemilih tidak dapat memilih lagi. " +
-        "Pemenang akan ditetapkan berdasarkan suara terbanyak.";
+        "Setelah ditutup, pemilih tidak dapat memilih lagi. Pemenang akan ditetapkan berdasarkan suara terbanyak.";
 
     }
 
@@ -1701,8 +1510,7 @@ function modal() {
     title = "Reset semua data?";
 
     body =
-      "Semua kandidat, suara, dan data pemilih " +
-      "akan dihapus permanen.";
+      "Semua kandidat, suara, dan data pemilih akan dihapus permanen.";
 
   }
 
@@ -1732,13 +1540,13 @@ function modal() {
     title = "Hapus data pemilih?";
 
     body =
-      "Gunakan hanya untuk memperbaiki kesalahan input. " +
-      "Suara akan ikut berkurang.";
+      "Gunakan hanya untuk memperbaiki kesalahan input. Suara akan ikut berkurang.";
 
   }
 
 
   return `
+
     <div class="modal">
 
       <div class="modal-card">
@@ -1782,7 +1590,9 @@ function modal() {
       </div>
 
     </div>
+
   `;
+
 }
 
 
@@ -1803,14 +1613,15 @@ async function doModal() {
 
     if (m === "confirm") {
 
-      const r = await api(
-        "submitVote",
-        {
-          nama: s.nama,
-          kelas: s.kelas,
-          candidateId: s.selected
-        }
-      );
+      let r =
+        await api(
+          "submitVote",
+          {
+            nama: s.nama,
+            kelas: s.kelas,
+            candidateId: s.selected
+          }
+        );
 
 
       if (!r.ok) {
@@ -1818,7 +1629,9 @@ async function doModal() {
         if (r.error === "ALREADY_VOTED") {
 
           s.step = "sudah";
+
           render();
+
           return;
 
         }
@@ -1831,6 +1644,7 @@ async function doModal() {
 
 
       s.step = "thanks";
+
       s.selected = null;
 
       render();
@@ -1861,21 +1675,28 @@ async function doModal() {
           'input[name="tieWinner"]:checked'
         );
 
-      const sorted = state.candidates
-        .slice()
-        .sort(
-          (a, b) =>
-            (state.votes[b.id] || 0) -
-            (state.votes[a.id] || 0)
+
+      const sorted =
+        state.candidates
+          .slice()
+          .sort(
+            (a, b) =>
+              (state.votes[b.id] || 0) -
+              (state.votes[a.id] || 0)
+          );
+
+
+      const top =
+        sorted.length
+          ? state.votes[sorted[0].id] || 0
+          : 0;
+
+
+      const tied =
+        sorted.filter(
+          c =>
+            (state.votes[c.id] || 0) === top
         );
-
-      const top = sorted.length
-        ? state.votes[sorted[0].id] || 0
-        : 0;
-
-      const tied = sorted.filter(
-        c => (state.votes[c.id] || 0) === top
-      );
 
 
       if (
@@ -1885,6 +1706,7 @@ async function doModal() {
       ) {
 
         s.modal = "close";
+
         render();
 
         toast(
@@ -1898,16 +1720,19 @@ async function doModal() {
 
 
       const winnerId =
-        checked ? checked.value : "";
+        checked
+          ? checked.value
+          : "";
 
 
-      const r = await api(
-        "adminCloseElection",
-        {
-          pin: s.pin,
-          winnerId
-        }
-      );
+      let r =
+        await api(
+          "adminCloseElection",
+          {
+            pin: s.pin,
+            winnerId
+          }
+        );
 
 
       if (!r.ok) {
@@ -1926,12 +1751,13 @@ async function doModal() {
 
     if (m === "reset") {
 
-      const r = await api(
-        "adminResetAll",
-        {
-          pin: s.pin
-        }
-      );
+      let r =
+        await api(
+          "adminResetAll",
+          {
+            pin: s.pin
+          }
+        );
 
 
       if (!r.ok) {
@@ -1942,6 +1768,7 @@ async function doModal() {
       s.view = "vote";
       s.pin = "";
       s.step = "identitas";
+
 
       await refresh();
 
@@ -1954,12 +1781,13 @@ async function doModal() {
 
     if (m === "reopen") {
 
-      const r = await api(
-        "adminReopenElection",
-        {
-          pin: s.pin
-        }
-      );
+      let r =
+        await api(
+          "adminReopenElection",
+          {
+            pin: s.pin
+          }
+        );
 
 
       if (!r.ok) {
@@ -1969,7 +1797,9 @@ async function doModal() {
 
       await refresh();
 
-      toast("Pemilihan dibuka kembali.");
+      toast(
+        "Pemilihan dibuka kembali."
+      );
 
       return;
 
@@ -1978,13 +1808,14 @@ async function doModal() {
 
     if (m === "delcand") {
 
-      const r = await api(
-        "adminDeleteCandidate",
-        {
-          pin: s.pin,
-          id: s.delid
-        }
-      );
+      let r =
+        await api(
+          "adminDeleteCandidate",
+          {
+            pin: s.pin,
+            id: s.delid
+          }
+        );
 
 
       if (!r.ok) {
@@ -2003,13 +1834,14 @@ async function doModal() {
 
     if (m === "delvoter") {
 
-      const r = await api(
-        "adminDeleteVoterRow",
-        {
-          pin: s.pin,
-          key: s.delkey
-        }
-      );
+      let r =
+        await api(
+          "adminDeleteVoterRow",
+          {
+            pin: s.pin,
+            key: s.delkey
+          }
+        );
 
 
       if (!r.ok) {
@@ -2018,6 +1850,7 @@ async function doModal() {
 
 
       await refresh();
+
       await loadVoters();
 
       toast("Data dihapus.");
@@ -2028,7 +1861,10 @@ async function doModal() {
 
   } catch (e) {
 
-    toast(e.message, true);
+    toast(
+      e.message,
+      true
+    );
 
   }
 
@@ -2041,30 +1877,35 @@ async function doModal() {
 
 async function loadVoters() {
 
-  const r = await api(
-    "adminGetVoters",
-    {
-      pin: s.pin
-    }
-  );
+  let r =
+    await api(
+      "adminGetVoters",
+      {
+        pin: s.pin
+      }
+    );
 
 
   if (r.ok) {
 
-    s.voters = r.voters || [];
+    s.voters = r.voters;
 
     render();
 
   } else {
 
-    toast(r.error, true);
+    toast(
+      r.error,
+      true
+    );
 
   }
+
 }
 
 
 /* =========================
-   CLICK EVENTS
+   EVENTS
 ========================= */
 
 document.addEventListener(
@@ -2084,6 +1925,7 @@ document.addEventListener(
       if (a === "admin") {
 
         s.view = "adminLogin";
+
         render();
 
       }
@@ -2092,6 +1934,7 @@ document.addEventListener(
       else if (a === "exit") {
 
         s.view = "vote";
+
         s.pin = "";
 
         render();
@@ -2109,12 +1952,16 @@ document.addEventListener(
       else if (a === "go") {
 
         const n =
-          document.getElementById("nama")
-            ?.value.trim();
+          document
+            .getElementById("nama")
+            ?.value
+            .trim();
 
         const k =
-          document.getElementById("kelas")
-            ?.value.trim();
+          document
+            .getElementById("kelas")
+            ?.value
+            .trim();
 
 
         if (!n || !k) {
@@ -2134,13 +1981,14 @@ document.addEventListener(
         render();
 
 
-        const r = await api(
-          "checkVoted",
-          {
-            nama: n,
-            kelas: k
-          }
-        );
+        let r =
+          await api(
+            "checkVoted",
+            {
+              nama: n,
+              kelas: k
+            }
+          );
 
 
         s.busy = false;
@@ -2158,6 +2006,7 @@ document.addEventListener(
       else if (a === "back") {
 
         s.step = "identitas";
+
         s.selected = null;
 
         render();
@@ -2167,7 +2016,8 @@ document.addEventListener(
 
       else if (a === "select") {
 
-        s.selected = el.dataset.id;
+        s.selected =
+          el.dataset.id;
 
         render();
 
@@ -2185,26 +2035,30 @@ document.addEventListener(
 
       else if (a === "login") {
 
-        const p =
-          document.getElementById("pin").value;
+        let p =
+          document
+            .getElementById("pin")
+            .value;
 
         s.pin = p;
 
 
-        const r = await api(
-          "adminLogin",
-          {
-            pin: p
-          }
-        );
+        let r =
+          await api(
+            "adminLogin",
+            {
+              pin: p
+            }
+          );
 
 
         if (r.ok) {
 
           s.view = "admin";
+
           s.tab = "kandidat";
 
-          await refresh();
+          render();
 
         } else {
 
@@ -2220,9 +2074,11 @@ document.addEventListener(
 
       else if (a === "tab") {
 
-        s.tab = el.dataset.tab;
+        s.tab =
+          el.dataset.tab;
 
         render();
+
 
         if (s.tab === "rekap") {
           loadVoters();
@@ -2233,50 +2089,38 @@ document.addEventListener(
 
       else if (a === "addcand") {
 
-        const no =
-          document.getElementById("cNo")?.value || "";
+        let r =
+          await api(
+            "adminAddCandidate",
+            {
+              pin: s.pin,
 
-        const ketua =
-          document.getElementById("cKetua")?.value || "";
+              no:
+                document
+                  .getElementById("cNo")
+                  .value,
 
-        const fotoKetua =
-          document.getElementById("cFotoKetua")?.value || "";
+              ketua:
+                document
+                  .getElementById("cKetua")
+                  .value,
 
-        const wakil =
-          document.getElementById("cWakil")?.value || "";
+              wakil:
+                document
+                  .getElementById("cWakil")
+                  .value,
 
-        const fotoWakil =
-          document.getElementById("cFotoWakil")?.value || "";
-
-        const visi =
-          document.getElementById("cVisi")?.value || "";
-
-
-        if (!ketua.trim()) {
-          return toast(
-            "Nama calon ketua wajib diisi.",
-            true
+              visi:
+                document
+                  .getElementById("cVisi")
+                  .value
+            }
           );
-        }
-
-
-        const r = await api(
-          "adminAddCandidate",
-          {
-            pin: s.pin,
-            no: no,
-            ketua: ketua,
-            fotoKetua: fotoKetua,
-            wakil: wakil,
-            fotoWakil: fotoWakil,
-            visi: visi
-          }
-        );
 
 
         if (r.ok) {
 
-          await refresh(false);
+          await refresh();
 
           toast(
             "Calon ditambahkan."
@@ -2296,7 +2140,8 @@ document.addEventListener(
 
       else if (a === "delcand") {
 
-        s.delid = el.dataset.id;
+        s.delid =
+          el.dataset.id;
 
         s.modal = "delcand";
 
@@ -2307,12 +2152,13 @@ document.addEventListener(
 
       else if (a === "openElection") {
 
-        const r = await api(
-          "adminOpenElection",
-          {
-            pin: s.pin
-          }
-        );
+        let r =
+          await api(
+            "adminOpenElection",
+            {
+              pin: s.pin
+            }
+          );
 
 
         if (r.ok) {
@@ -2344,12 +2190,13 @@ document.addEventListener(
 
       else if (a === "export") {
 
-        const r = await api(
-          "adminExport",
-          {
-            pin: s.pin
-          }
-        );
+        let r =
+          await api(
+            "adminExport",
+            {
+              pin: s.pin
+            }
+          );
 
 
         if (!r.ok) {
@@ -2362,26 +2209,29 @@ document.addEventListener(
         }
 
 
-        const blob = new Blob(
-          [
-            JSON.stringify(
-              r,
-              null,
-              2
-            )
-          ],
-          {
-            type:
-              "application/json"
-          }
-        );
+        let blob =
+          new Blob(
+            [
+              JSON.stringify(
+                r,
+                null,
+                2
+              )
+            ],
+            {
+              type:
+                "application/json"
+            }
+          );
 
 
-        const u =
+        let u =
           URL.createObjectURL(blob);
 
-        const a =
+
+        let a =
           document.createElement("a");
+
 
         a.href = u;
 
@@ -2389,6 +2239,7 @@ document.addEventListener(
           "rekap-osis-" +
           Date.now() +
           ".json";
+
 
         a.click();
 
@@ -2411,16 +2262,18 @@ document.addEventListener(
 
       else if (a === "periode") {
 
-        const r = await api(
-          "adminSavePeriode",
-          {
-            pin: s.pin,
-            periode:
-              document.getElementById(
-                "periode"
-              ).value
-          }
-        );
+        let r =
+          await api(
+            "adminSavePeriode",
+            {
+              pin: s.pin,
+
+              periode:
+                document
+                  .getElementById("periode")
+                  .value
+            }
+          );
 
 
         if (r.ok) {
@@ -2445,10 +2298,10 @@ document.addEventListener(
 
       else if (a === "pinchange") {
 
-        const p =
-          document.getElementById(
-            "newpin"
-          ).value;
+        let p =
+          document
+            .getElementById("newpin")
+            .value;
 
 
         if (p.length < 4) {
@@ -2461,13 +2314,14 @@ document.addEventListener(
         }
 
 
-        const r = await api(
-          "adminChangePin",
-          {
-            oldPin: s.pin,
-            newPin: p
-          }
-        );
+        let r =
+          await api(
+            "adminChangePin",
+            {
+              oldPin: s.pin,
+              newPin: p
+            }
+          );
 
 
         if (r.ok) {
@@ -2554,7 +2408,7 @@ document.addEventListener(
 
 
 /* =========================
-   SEARCH
+   INPUT
 ========================= */
 
 document.addEventListener(
@@ -2568,10 +2422,12 @@ document.addEventListener(
 
       render();
 
+
       const x =
         document.getElementById(
           "search"
         );
+
 
       if (x) {
 
@@ -2591,41 +2447,38 @@ document.addEventListener(
 
 
 /* =========================
-   KEYBOARD
+   ENTER
 ========================= */
 
 document.addEventListener(
   "keydown",
   e => {
 
-    if (e.key !== "Enter") {
-      return;
-    }
+    if (e.key === "Enter") {
+
+      if (
+        e.target.id === "nama" ||
+        e.target.id === "kelas"
+      ) {
+
+        document
+          .querySelector(
+            '[data-a="go"]'
+          )
+          ?.click();
+
+      }
 
 
-    if (
-      e.target.id === "nama" ||
-      e.target.id === "kelas"
-    ) {
+      if (e.target.id === "pin") {
 
-      document
-        .querySelector(
-          '[data-a="go"]'
-        )
-        ?.click();
+        document
+          .querySelector(
+            '[data-a="login"]'
+          )
+          ?.click();
 
-    }
-
-
-    if (
-      e.target.id === "pin"
-    ) {
-
-      document
-        .querySelector(
-          '[data-a="login"]'
-        )
-        ?.click();
+      }
 
     }
 
@@ -2637,114 +2490,39 @@ document.addEventListener(
    PWA INSTALL
 ========================= */
 
-function isInstalled() {
-
-  return (
-    window.matchMedia(
-      "(display-mode: standalone)"
-    ).matches ||
-
-    window.matchMedia(
-      "(display-mode: window-controls-overlay)"
-    ).matches ||
-
-    window.navigator.standalone === true
-  );
-
-}
-
-
-function hideInstallBox() {
-
-  const box =
-    document.getElementById(
-      "installBox"
-    );
-
-  if (box) {
-    box.hidden = true;
-  }
-
-}
-
-
-if (isInstalled()) {
-  hideInstallBox();
-}
-
-
 window.addEventListener(
   "beforeinstallprompt",
   e => {
-
-    if (isInstalled()) {
-
-      hideInstallBox();
-
-      return;
-
-    }
 
     e.preventDefault();
 
     installPrompt = e;
 
-    const box =
-      document.getElementById(
-        "installBox"
-      );
-
-    if (box) {
-      box.hidden = false;
-    }
+    document.getElementById(
+      "installBox"
+    ).hidden = false;
 
   }
 );
 
 
-window.addEventListener(
-  "appinstalled",
-  () => {
+document.getElementById(
+  "installBtn"
+).onclick = async () => {
 
-    installPrompt = null;
+  if (!installPrompt) return;
 
-    hideInstallBox();
+  installPrompt.prompt();
 
-  }
-);
+  await installPrompt.userChoice;
 
+  installPrompt = null;
 
-document.addEventListener(
-  "click",
-  async e => {
+  document.getElementById(
+    "installBox"
+  ).hidden = true;
 
-    const btn =
-      e.target.closest("#installBtn");
-
-    if (!btn) return;
-
-    if (!installPrompt) {
-
-      if (isInstalled()) {
-        hideInstallBox();
-      }
-
-      return;
-
-    }
-
-    installPrompt.prompt();
-
-    try {
-      await installPrompt.userChoice;
-    } catch (err) {}
-
-    installPrompt = null;
-
-    hideInstallBox();
-
-  }
-);
+};
 
 
 /* =========================
@@ -2754,7 +2532,7 @@ document.addEventListener(
 if ("serviceWorker" in navigator) {
 
   navigator.serviceWorker
-    .register("sw.js?v=10")
+    .register("sw.js")
     .catch(() => {});
 
 }
@@ -2765,11 +2543,6 @@ if ("serviceWorker" in navigator) {
 ========================= */
 
 refresh();
-
-
-/* =========================
-   AUTO REFRESH
-========================= */
 
 setInterval(
   () => refresh(true),
