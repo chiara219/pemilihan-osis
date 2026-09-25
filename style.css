@@ -1175,7 +1175,7 @@ body {
 .hero-banner {
   background: linear-gradient(
     135deg,
-    #e8e2f0 0%,
+    #E7F0DC 0%,
     #E2F0CB 100%
   ) !important;
 }
@@ -1199,7 +1199,7 @@ header,
 .topbar,
 .navbar,
 .app-header {
-  background: #a759f0 !important;
+  background:#C7CEEA!important;
 }
 
 /* NAMA SEKOLAH */
