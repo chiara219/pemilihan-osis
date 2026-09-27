@@ -95,7 +95,7 @@
       encodeURIComponent(String(c.no)) +
       "-" +
       role +
-      ".jpeg"
+      ".png"
     );
   }
 
